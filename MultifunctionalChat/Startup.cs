@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MultifunctionalChat.Models;
 using MultifunctionalChat.Services;
+using SignalRApp;
 
 namespace MultifunctionalChat
 {
@@ -25,8 +26,10 @@ namespace MultifunctionalChat
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSignalR();
             services.AddControllersWithViews();
             services.AddScoped<IRepository<User>, UserService>();
+            services.AddScoped<IRepository<Message>, MessageService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -51,9 +54,10 @@ namespace MultifunctionalChat
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute(
+                endpoints.MapHub<ChatHub>("/chat");
+                /*endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Home}/{action=Index}/{id?}");*/
             });
         }
     }
