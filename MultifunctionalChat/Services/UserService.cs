@@ -5,8 +5,7 @@ using MultifunctionalChat.Models;
 
 namespace MultifunctionalChat.Services
 {
-    //ToDo : IRepository<User>
-    public class UserService
+    public class UserService : IRepository<User>
     {
         private readonly List<User> usersList;
 
@@ -60,6 +59,11 @@ namespace MultifunctionalChat.Services
             catch (Exception)
             {
             }
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }

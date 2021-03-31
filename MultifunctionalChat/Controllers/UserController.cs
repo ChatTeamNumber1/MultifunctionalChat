@@ -9,11 +9,10 @@ namespace Warehouse.Controllers
     [Route("[controller]")]
     public class UserController : ControllerBase
     {
-        //ToDo IRepository<User>
-        private readonly UserService usersService;
+        private readonly IRepository<User> usersService;
         private readonly ILogger<UserController> logger;
 
-        public UserController(UserService usersService, ILogger<UserController> logger)
+        public UserController(IRepository<User> usersService, ILogger<UserController> logger)
         {
             this.usersService = usersService;
             this.logger = logger;
