@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using MultifunctionalChat.Models;
 
 namespace MultifunctionalChat.Services
@@ -12,11 +14,12 @@ namespace MultifunctionalChat.Services
         public MessageService()
         {
             messagesList = new List<Message> {
-                new Message { Id = 1, Text = "1", UserName = "Главный" },
-                new Message { Id = 2, Text = "Всем привет", UserName = "Сергей" },
-                new Message { Id = 3, Text = "Скучно", UserName = "Наталья" }
+                new Message { Id = 1, UserName = "Главный", Text = "Решаем задачу" },
+                new Message { Id = 2, UserName = "Сергей", Text = "Принято" },
+                new Message { Id = 3, UserName = "Наталья", Text = "Хорошо" }
             };
         }
+
         public List<Message> GetList()
         {
             return messagesList;
@@ -35,7 +38,6 @@ namespace MultifunctionalChat.Services
             {
             }
         }
-
         public void Update(Message updatedMessage)
         {
             try
@@ -47,14 +49,13 @@ namespace MultifunctionalChat.Services
             {
             }
         }
-
         public void Delete(int id)
         {
-            var messageType = messagesList.Where(x => x.Id == id).FirstOrDefault();
+            Message messageToDelete = messagesList.Find(x => x.Id == id);
 
             try
             {
-                messagesList.Remove(messageType);
+                messagesList.Remove(messageToDelete);
             }
             catch (Exception)
             {

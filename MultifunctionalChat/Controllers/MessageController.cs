@@ -4,70 +4,65 @@ using Microsoft.Extensions.Logging;
 using MultifunctionalChat.Models;
 using MultifunctionalChat.Services;
 
-namespace Warehouse.Controllers
+namespace MultifunctionalChat.Controllers
 {
-    //TODO Потом заменить на то, что сделает Эллина
     [Route("[controller]")]
     public class MessageController : ControllerBase
     {
-        private readonly IRepository<Message> messagesService;
+        private readonly IRepository<Message> messageService;
         private readonly ILogger<MessageController> logger;
 
-        public MessageController(IRepository<Message> messagesService, ILogger<MessageController> logger)
+        public MessageController(IRepository<Message> messageService, ILogger<MessageController> logger)
         {
-            this.messagesService = messagesService;
+            this.messageService = messageService;
             this.logger = logger;
         }
 
         [HttpGet]
         public ActionResult<List<Message>> Get()
         {
-            var dataForReact = messagesService.GetList();
-            logger.LogInformation("Пользователи найдены");
-            return dataForReact;
+            var messagesList = messageService.GetList();
+            logger.LogInformation("Выведен полный список сообщений");
+            return messagesList;
         }
 
         [HttpGet("{id}")]
         public ActionResult<Message> Get(int id)
         {
-            Message messages = messagesService.Get(id);
-            if (messages == null)
-            {
-                logger.LogError($"Нет пользователя с id = {id}");
-                return NotFound();
-            }
-
-            logger.LogInformation($"Получен пользователь с id = {id}");
-            return messages;
+            var message = messageService.Get(id);
+            logger.LogInformation($"Выведено сообщение с id = {id}");
+            return message;
         }
 
         [HttpPost]
-        public ActionResult<Message> Post(Message messages)
+        public ActionResult<Message> Post(Message message)
         {
-            messagesService.Create(messages);
-            logger.LogInformation($"Добавлен пользователь с id = {messages.Id}");
-            return Ok($"Добавлен пользователь с id = {messages.Id}");
+            messageService.Create(message);
+            logger.LogInformation($"Сообщение с id = {message.Id} добавлено в общий список");
+            return Ok($"Сообщение с id = {message.Id} добавлено в общий список");
         }
 
         [HttpPut("{id}")]
-        public ActionResult<Message> Edit(Message messages)
+        public ActionResult<Message> Edit(Message message)
         {
-            messagesService.Update(messages);
-            logger.LogInformation($"Отредактирован пользователь с id = {messages.Id}");
-            return Ok($"Отредактирован пользователь с id = {messages.Id}");
+            messageService.Update(message);
+            logger.LogInformation($"Обновлена запись сообщения с id = {message.Id}");
+            return Ok($"Обновлена запись сообщения с id = {message.Id}");
         }
 
         [HttpDelete("{id}")]
         public ActionResult<Message> Delete(int id)
         {
-            Message messages = messagesService.Get(id);
-            if (messages == null)
+            Message message = messageService.Get(id);
+            if (message == null)
             {
+                logger.LogError($"Нет сообщения с id = {id}");
                 return NotFound();
             }
 
-            messagesService.Delete(messages.Id);
-            return Ok($"Удален пользователь с id = {messages.Id}");
+            messageService.Delete(id);
+            logger.LogInformation($"Удалено сообщение с id = {id}");
+            return Ok($"Удалено сообщение с id = {id}");
         }
     }
 }

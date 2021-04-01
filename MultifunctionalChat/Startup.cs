@@ -28,8 +28,8 @@ namespace MultifunctionalChat
         {
             services.AddSignalR();
             services.AddControllersWithViews();
-            services.AddScoped<IRepository<User>, UserService>();
-            services.AddScoped<IRepository<Message>, MessageService>();
+            services.AddSingleton<IRepository<User>, UserService>();
+            services.AddSingleton<IRepository<Message>, MessageService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,9 +55,9 @@ namespace MultifunctionalChat
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<ChatHub>("/chat");
-                /*endpoints.MapControllerRoute(
+                endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");*/
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }
