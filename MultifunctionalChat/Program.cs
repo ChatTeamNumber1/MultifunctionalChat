@@ -21,6 +21,7 @@ namespace MultifunctionalChat
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
+                    webBuilder.UseWebRoot("wwwroot");
                 });
     }
 }
