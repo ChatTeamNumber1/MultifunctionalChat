@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>SignalR Chat - Metanit.com</title>
+    <title>Лучший чат от сильнейшей команды мира</title>
 </head>
 <body>
     <div id="loginBlock">
@@ -17,6 +17,7 @@
         <input type="text" id="message" />
         <input type="button" id="sendBtn" value="Отправить" />
     </div>
+
     <div id="chatroom"></div>
     <script src="js/signalr/dist/browser/signalr.min.js"></script>
     <script>
@@ -32,17 +33,18 @@
             let userNameElem = document.createElement("b");
             userNameElem.appendChild(document.createTextNode(userName + ': '));
 
-            // создает элемент <p> для времени сообщения
-            let dtElem = document.createElement("p");
+            // создает элемент для времени сообщения
             let now = new Date();
-            dtElem.appendChild(document.createTextNode(
+            userNameElem.appendChild(document.createTextNode(
                 now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds()));
 
             // создает элемент <p> для сообщения пользователя
+            let textElem = document.createElement("p");
+            textElem.appendChild(document.createTextNode(message));
+
             let elem = document.createElement("p");
             elem.appendChild(userNameElem);
-            elem.appendChild(dtElem);
-            elem.appendChild(document.createTextNode(message));
+            elem.appendChild(textElem);
 
             var firstElem = document.getElementById("chatroom").firstChild;
             document.getElementById("chatroom").insertBefore(elem, firstElem);
@@ -68,16 +70,16 @@
             var xhr = new XMLHttpRequest();
 
             xhr.open("post", "/message", true);
-            /*xhr.onload = function () {
-                console.log(xhr);
-                if (xhr.status === 200) {
-                    //this.loadData();
-                }
-            }.bind(this);*/
             xhr.send(data);
         });
 
         hubConnection.start();
     </script>
+
+    <div id="content"></div>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/16.11.0/umd/react.development.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.11.0/umd/react-dom.development.js"></script>
+    <script src="js/app.jsx"></script>
+
 </body>
 </html>
