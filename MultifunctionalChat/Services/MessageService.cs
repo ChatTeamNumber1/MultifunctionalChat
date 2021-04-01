@@ -14,10 +14,19 @@ namespace MultifunctionalChat.Services
         public MessageService()
         {
             messagesList = new List<Message> {
-                new Message { Id = 1, UserName = "Главный", Text = "Решаем задачу" },
-                new Message { Id = 2, UserName = "Сергей", Text = "Принято" },
-                new Message { Id = 3, UserName = "Наталья", Text = "Хорошо" }
+                new Message { Id = 1, UserId = 1, Text = "Решаем задачу" },
+                new Message { Id = 2, UserId = 2, Text = "Принято" },
+                new Message { Id = 3, UserId = 3, Text = "Хорошо" }
             };
+
+            //Список пользователей пока получаем так (без ApplicationContext)
+            UserService us = new UserService();
+            foreach (var message in messagesList)
+            {
+                User user = us.Get(message.UserId);
+                message.UserName = user.Name;
+                message.MessageDate = DateTime.Now;
+            }
         }
 
         public List<Message> GetList()
