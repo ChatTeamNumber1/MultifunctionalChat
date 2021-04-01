@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using MultifunctionalChat.Models;
 using MultifunctionalChat.Services;
 
-namespace Warehouse.Controllers
+namespace MultifunctionalChat.Controllers
 {
     [Route("[controller]")]
     public class UserController : ControllerBase
