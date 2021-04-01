@@ -25,6 +25,7 @@ namespace MultifunctionalChat.Services
             {
                 User user = us.Get(message.UserId);
                 message.UserName = user.Name;
+                message.MessageDate = DateTime.Now;
             }
         }
 

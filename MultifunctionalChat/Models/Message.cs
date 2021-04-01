@@ -17,7 +17,7 @@ namespace MultifunctionalChat.Models
 
         [NotMapped]
         public string UserName { get; set; }
-        
-        //TODO: MessageDate        
+
+        public DateTime MessageDate { get; set; }
     }
 }

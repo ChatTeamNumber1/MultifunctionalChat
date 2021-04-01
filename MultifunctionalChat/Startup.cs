@@ -20,10 +20,10 @@ namespace MultifunctionalChat
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSignalR();
-            services.AddControllersWithViews();
             services.AddSingleton<IRepository<User>, UserService>();
             services.AddSingleton<IRepository<Message>, MessageService>();
+            services.AddSignalR();
+            services.AddControllers();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
