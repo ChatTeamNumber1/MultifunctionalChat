@@ -3,30 +3,55 @@
     <title>Лучший чат от сильнейшей команды мира</title>
 </head>
 
-@if (User.Identity.IsAuthenticated)
-{
-    <a href="~/Account/Logout">Выйти</a>
-}
-else
-{
-    <a href="~/Account/Login">Войти</a>
-}
+<table width="100%">
+    <tbody>
+        <tr>
+            <td width="25%" style="vertical-align:top">
+                <h3>Доступные комнаты</h3>
+                <br />
+                <h3>Комната1</h3>
+                <br />
+                <h3>Комната2</h3>
+                <br />
+                <h3>Комната3</h3>
+            </td>
+            <td width="75%">
+                <div id="header"></div>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <a href="~/Account/Logout">Выйти</a>
+                }
+                else
+                {
+                    <a href="~/Account/Login">Войти</a>
+                }
 
-<div id="userNameBlock">
+                <div id="userNameBlock">
+                    <input id="userName" type="text" value="@User.Identity.Name" hidden="" />
+                </div>
 
-    <input id="userName" type="text" value="@User.Identity.Name" hidden=""/>
-</div>
-<br />
+                <br />
 
-<div id="header"></div>
-<br />
 
-<div id="inputForm">
-    <input type="text" id="message" />
-    <input type="button" id="sendBtn" value="Отправить" />
-</div>
+                <div id="chatroom" style="width:100%; height: 400px; overflow-y:scroll"></div>
 
-<div id="chatroom"></div>
+                <br />
+
+                <div id="inputForm" style="width:100%">
+                    <h3>Новое сообщение</h3>
+                    <textarea style="width:100%" id="message"></textarea>
+                    <br />
+                    <input style="width:100%" type="button" id="sendBtn" value="Отправить" />
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/16.11.0/umd/react.development.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.11.0/umd/react-dom.development.js"></script>
+<script src="~/js/app.jsx"></script>
+
 <script src="~/js/signalr/dist/browser/signalr.min.js"></script>
 <script>
     const hubConnection = new signalR.HubConnectionBuilder()
@@ -39,33 +64,29 @@ else
         if (userName == "") {
             return;
         }
-        // создаем элемент <b> для имени пользователя
-        let userNameElem = document.createElement("b");
-        userNameElem.appendChild(document.createTextNode(userName + ': '));
-
-        // создает элемент для времени сообщения
-        let now = new Date();
-        userNameElem.appendChild(document.createTextNode(
-            now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds()));
 
         // создает элемент <p> для сообщения пользователя
-        let textElem = document.createElement("p");
-        textElem.appendChild(document.createTextNode(message));
-
+        let now = new Date();
         let elem = document.createElement("p");
-        elem.appendChild(userNameElem);
-        elem.appendChild(textElem);
+        elem.innerHTML =
+            "<p><table width=\"100%\"><tbody><tr>" +
+            "<td width=\"50%\"><b>" + userName + "</b></td>" +
+            "<td width=\"50%\" align=\"right\">" + now.toLocaleString("ru", {
+                year: '2-digit', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            }) + "</td>" +
+            "</tr></tbody></table>" +
+            "<p>" + message + "</p></p>";
 
-        var firstElem = document.getElementById("chatroom").firstChild;
-        document.getElementById("chatroom").insertBefore(elem, firstElem);
-
+        document.getElementById("chatroom").appendChild(elem);
     });
 
     // установка имени пользователя
     userName = document.getElementById("userName").value;
     if (userName != "") {
-        document.getElementById("header").innerHTML = '<h3>Welcome ' + userName + '</h3>';
+        document.getElementById("header").innerHTML = userName;
     }
+
     // отправка сообщения на сервер
     document.getElementById("sendBtn").addEventListener("click", function (e) {
         if (userName == "") {
@@ -73,7 +94,6 @@ else
         }
         let message = document.getElementById("message").value;
         hubConnection.invoke("Send", message, userName);
-
 
         const data = new FormData();
         data.append("text", message);
@@ -88,8 +108,3 @@ else
 
     hubConnection.start();
 </script>
-
-<div id="content"></div>
-<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/16.11.0/umd/react.development.js"></script>
-<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.11.0/umd/react-dom.development.js"></script>
-<script src="~/js/app.jsx"></script>

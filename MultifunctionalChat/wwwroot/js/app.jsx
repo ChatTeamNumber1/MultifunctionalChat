@@ -22,7 +22,16 @@
     componentDidMount() {
         this.loadData();
     }
-    
+
+    getFormattedDate(messageDate) {
+
+        let dt = new Date(messageDate);
+        return dt.toLocaleString("ru", {
+            year: '2-digit', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+    }
+
     render() {
 
         return <div>
@@ -30,7 +39,14 @@
             <h3>История сообщений</h3>
             {this.state.messages.reverse().map(message =>
                 <p>
-                    <b>{message.userName}</b>
+                    <table width="100%">
+                        <tbody>
+                            <tr>
+                                <td width="50%"><b>{message.userName}</b></td>
+                                <td width="50%" align="right">{this.getFormattedDate(message.messageDate)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     <p>{message.text}</p>
                 </p>
             )}
@@ -40,5 +56,5 @@
 
 ReactDOM.render(
     <MessagesList />,
-    document.getElementById("content")
+    document.getElementById("chatroom")
 );

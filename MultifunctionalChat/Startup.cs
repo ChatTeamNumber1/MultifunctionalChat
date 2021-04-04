@@ -63,7 +63,7 @@ namespace MultifunctionalChat
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Account}/{action=Index}");
+                    pattern: "{controller=Account}/{action=Login}");
                 endpoints.MapHub<ChatHub>("/chat");
                 endpoints.MapControllers();
             });
