@@ -8,14 +8,17 @@ namespace MultifunctionalChat.Services
     public class UserService : IRepository<User>
     {
         private readonly List<User> usersList;
+        private readonly ApplicationContext context;
 
-        public UserService()
+        public UserService(ApplicationContext context)
         {
-            usersList = new List<User> { 
+            this.context = context;
+            usersList = context.Users.ToList();
+            /*usersList = new List<User> { 
                 new User { Id = 1, Login = "1", Name = "Главный" },
                 new User { Id = 2, Login = "Сергей", Name = "Сергей" },
                 new User { Id = 3, Login = "Наталья", Name = "Наталья" }
-            };
+            };*/
         }
         public List<User> GetList()
         {
@@ -63,7 +66,7 @@ namespace MultifunctionalChat.Services
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
     }
 }

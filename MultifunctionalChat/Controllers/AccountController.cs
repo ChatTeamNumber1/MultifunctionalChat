@@ -8,6 +8,8 @@ using MultifunctionalChat.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace MultifunctionalChat.Controllers
 {
@@ -18,6 +20,22 @@ namespace MultifunctionalChat.Controllers
         {
             service = context;
         }
+
+        //TODO Андрей, если видишь эту функцию не здесь, перенеси
+        public static string EncryptPassword(string Password)
+        {
+            var data = Encoding.UTF8.GetBytes(Password);
+            using (SHA512 shaM = new SHA512Managed())
+            {
+                var hashedInputBytes = shaM.ComputeHash(data);
+                var hashedInputStringBuilder = new StringBuilder(128);
+                foreach (var b in hashedInputBytes)
+                    hashedInputStringBuilder.Append(b.ToString("X2"));
+                return hashedInputStringBuilder.ToString();
+            }
+        }
+
+
         // тестирование SignalR
         public IActionResult Index()
         {

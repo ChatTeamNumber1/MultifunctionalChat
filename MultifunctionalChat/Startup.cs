@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -16,19 +17,23 @@ namespace MultifunctionalChat
 {
     public class Startup
     {
+        public readonly IConfiguration configuration;
+
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            this.configuration = configuration;
         }
 
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
+            string connectionString = configuration.GetConnectionString("LocalConnection");
+            services.AddDbContext<ApplicationContext>(options => options.UseNpgsql(connectionString));
             services.AddMemoryCache();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<IRepository<User>, UserService>();
-            services.AddSingleton<IRepository<Message>, MessageService>();
+            services.AddTransient<IRepository<User>, UserService>();
+            services.AddTransient<IRepository<Message>, MessageService>();
             services.AddSignalR();
             services.AddControllers();
             services.AddReact(); 
