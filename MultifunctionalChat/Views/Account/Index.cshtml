@@ -97,7 +97,10 @@
 
         const data = new FormData();
         data.append("text", message);
+        //TODO Пользователя пока можно и на сервере вычислить, но лучше передавать сюда вместе с логином
         data.append("userId", "0");
+        //TODO Потом тут будут разные комнаты
+        data.append("roomId", "1");
         data.append("userName", userName);
         data.append("MessageDate", new Date());
         var xhr = new XMLHttpRequest();
