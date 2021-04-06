@@ -21,7 +21,6 @@ namespace MultifunctionalChat.Controllers
             service = context;
         }
 
-        //TODO Андрей, если видишь эту функцию не здесь, перенеси
         public static string EncryptPassword(string Password)
         {
             var data = Encoding.UTF8.GetBytes(Password);
@@ -34,7 +33,6 @@ namespace MultifunctionalChat.Controllers
                 return hashedInputStringBuilder.ToString();
             }
         }
-
 
         // тестирование SignalR
         public IActionResult Index()
@@ -52,7 +50,7 @@ namespace MultifunctionalChat.Controllers
         {
             if (ModelState.IsValid)
             {
-                User user = service.GetList().FirstOrDefault(x => x.Login == model.Login);
+                User user = service.GetList().FirstOrDefault(x => x.Login == model.Login && x.Password == EncryptPassword(model.Password));
                 if (user != null)
                 {
                     await Authenticate(user); // аутентификация
