@@ -13,8 +13,7 @@ namespace MultifunctionalChat.Migrations
                 name: "Messages",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<int>(type: "serial", nullable: false),
                     Text = table.Column<string>(type: "text", nullable: true),
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     RoomId = table.Column<int>(type: "integer", nullable: false),
@@ -29,8 +28,7 @@ namespace MultifunctionalChat.Migrations
                 name: "RoomMembers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<int>(type: "serial", nullable: false),
                     RoomId = table.Column<int>(type: "integer", nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -43,8 +41,7 @@ namespace MultifunctionalChat.Migrations
                 name: "Rooms",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<int>(type: "serial", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: true),
                     OwnerId = table.Column<int>(type: "integer", nullable: false),
                     IsPublic = table.Column<bool>(type: "boolean", nullable: false)
@@ -58,8 +55,7 @@ namespace MultifunctionalChat.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<int>(type: "serial", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: true),
                     Login = table.Column<string>(type: "text", nullable: true),
                     Password = table.Column<string>(type: "text", nullable: true)

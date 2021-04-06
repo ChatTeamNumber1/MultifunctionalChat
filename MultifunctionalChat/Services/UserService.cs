@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using MultifunctionalChat.Models;
 
 namespace MultifunctionalChat.Services
@@ -14,11 +15,6 @@ namespace MultifunctionalChat.Services
         {
             this.context = context;
             usersList = context.Users.ToList();
-            /*usersList = new List<User> { 
-                new User { Id = 1, Login = "1", Name = "Главный" },
-                new User { Id = 2, Login = "Сергей", Name = "Сергей" },
-                new User { Id = 3, Login = "Наталья", Name = "Наталья" }
-            };*/
         }
         public List<User> GetList()
         {
@@ -30,43 +26,77 @@ namespace MultifunctionalChat.Services
         }
         public void Create(User newUser)
         {
+            using var transaction = context.Database.BeginTransaction();
+
             try
             {
+                context.Users.Add(newUser);
+                context.SaveChanges();
+                transaction.Commit();
                 usersList.Add(newUser);
             }
             catch (Exception)
             {
+                transaction.Rollback();
             }
         }
 
         public void Update(User updatedUser)
         {
+            using var transaction = context.Database.BeginTransaction();
             try
             {
+                ///FIXME Так удалось обойти проблему открытого соединения в прошлом проекте
+                using var newContext = new ApplicationContext();
+                newContext.Entry(updatedUser).State = EntityState.Modified;
+                newContext.SaveChanges();
+
+                transaction.Commit();
                 int userIndex = usersList.IndexOf(Get(updatedUser.Id));
                 usersList[userIndex] = updatedUser;
             }
             catch (Exception)
             {
+                transaction.Rollback();
             }
         }
 
         public void Delete(int id)
         {
-            var userType = usersList.Where(x => x.Id == id).FirstOrDefault();
+            var userToDelete = usersList.Where(x => x.Id == id).FirstOrDefault();
+            using var transaction = context.Database.BeginTransaction();
 
             try
             {
-                usersList.Remove(userType);
+                context.Users.Remove(userToDelete);
+                context.SaveChanges();
+                transaction.Commit();
+                usersList.Remove(userToDelete);
             }
             catch (Exception)
             {
+                transaction.Rollback();
             }
+        }
+
+        private bool disposed = false;
+
+        public virtual void Dispose(bool disposing)
+        {
+            if (!this.disposed)
+            {
+                if (disposing)
+                {
+                    context.Dispose();
+                }
+            }
+            this.disposed = true;
         }
 
         public void Dispose()
         {
-            //throw new NotImplementedException();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
