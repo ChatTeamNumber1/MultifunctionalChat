@@ -1,4 +1,5 @@
-﻿<head>
+﻿@model MultifunctionalChat.Models.Message
+<head>
     <meta charset="utf-8" />
     <title>Лучший чат от сильнейшей команды мира</title>
 </head>
@@ -26,9 +27,9 @@
                     <a href="~/Account/Login">Войти</a>
                 }
 
-            <div id="userNameBlock">
-                <input id="userName" type="text" value="@User.Identity.Name" hidden="" />
-            </div>
+                <div id="userNameBlock">
+                    <input id="userName" type="text" value="@User.Identity.Name" hidden="" />
+                </div>
 
                 <br />
 
@@ -70,7 +71,7 @@
         let elem = document.createElement("p");
         elem.innerHTML =
             "<p><table width=\"100%\"><tbody><tr>" +
-        "<td width=\"50%\"><b>" + userName + "</b>" +
+            "<td width=\"50%\"><b>" + userName + "</b>" +
             "<img width=\"20\" src=\"https://downloader.disk.yandex.ru/preview/4d95f6dd1eb3cefe8de92b12bd4c54cebefb8a2e5701db1101f8c68264c592ed/606dd605/E_Nl6GuXiji-565wCjIywxa-dhcf3Q2sTIZbNUfDbE-svSzhIYYl1eT6t89YqFbrYNZbCahVPZstLzrPiUgmGQ%3D%3D?uid=0&filename=1.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&owner_uid=0&tknv=v2&size=2048x2048\" />"
 
         "</td>" +

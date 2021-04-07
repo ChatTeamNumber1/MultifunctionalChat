@@ -54,7 +54,7 @@ namespace MultifunctionalChat.Controllers
                 if (user != null)
                 {
                     await Authenticate(user); // аутентификация
-                    return RedirectToAction("Index", "Account");// переадресация на метод Index
+                    return RedirectToAction("Index", "Message");// переадресация на метод Index
                 }
                 ModelState.AddModelError("", "Некорректные логин и(или) пароль");
             }

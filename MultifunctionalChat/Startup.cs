@@ -28,7 +28,7 @@ namespace MultifunctionalChat
 
         public void ConfigureServices(IServiceCollection services)
         {
-            string connectionString = configuration.GetConnectionString("RemoteConnection");
+            string connectionString = configuration.GetConnectionString("LocalConnection");
             services.AddDbContext<ApplicationContext>(options => options.UseNpgsql(connectionString));
             services.AddMemoryCache();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

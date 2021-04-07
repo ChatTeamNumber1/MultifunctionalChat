@@ -42,7 +42,11 @@
                     <table width="100%">
                         <tbody>
                             <tr>
-                                <td width="50%"><b>{message.userName}</b></td>
+                                <td width="50%">
+                                    <b>{message.author.name}</b>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <img title={message.author.userRole.name} width="20" src={ message.author.userRole.imageAddress} />
+                                </td>
                                 <td width="50%" align="right">{this.getFormattedDate(message.messageDate)}</td>
                             </tr>
                         </tbody>

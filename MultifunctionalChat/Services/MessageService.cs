@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Microsoft.EntityFrameworkCore;
 using MultifunctionalChat.Models;
 
@@ -19,7 +20,9 @@ namespace MultifunctionalChat.Services
             foreach (var message in messagesList)
             {
                 User user = context.Users.Where(user => user.Id == message.UserId).FirstOrDefault();
-                message.UserName = user.Name;
+                Role role = context.Roles.Where(role => role.Id == user.RoleId).FirstOrDefault();
+                user.UserRole = role;
+                message.Author = user;
             }
         }
 
@@ -37,8 +40,8 @@ namespace MultifunctionalChat.Services
 
             try
             {
-                //TODO Айдишник может и должен прилетать с клиентской стороны
-                User user = context.Users.Where(user => user.Name == newMessage.UserName).FirstOrDefault();
+                //TODO Айдишник может и должен прилетать с клиентской стороны (и вообще это нарушение Single Responsibility)
+                User user = context.Users.Where(user => user.Name == newMessage.Author.Name).FirstOrDefault();
                 newMessage.UserId = user.Id;
                 newMessage.MessageDate = DateTime.Now;
 
