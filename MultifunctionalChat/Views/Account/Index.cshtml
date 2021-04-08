@@ -26,13 +26,13 @@
                     <a href="~/Account/Login">Войти</a>
                 }
 
-            <div id="userNameBlock">
-                <input id="userName" type="text" value="@User.Identity.Name" hidden="" />
-            </div>
+                <div id="userNameBlock">
+                    <input id="userName" type="text" value="@User.Identity.Name" hidden="" />
+                </div>
 
                 <br />
 
-
+                <h3>История сообщений</h3>
                 <div id="chatroom" style="width:100%; height: 400px; overflow-y:scroll"></div>
 
                 <br />
@@ -70,10 +70,8 @@
         let elem = document.createElement("p");
         elem.innerHTML =
             "<p><table width=\"100%\"><tbody><tr>" +
-        "<td width=\"50%\"><b>" + userName + "</b>" +
-            "<img width=\"20\" src=\"https://downloader.disk.yandex.ru/preview/4d95f6dd1eb3cefe8de92b12bd4c54cebefb8a2e5701db1101f8c68264c592ed/606dd605/E_Nl6GuXiji-565wCjIywxa-dhcf3Q2sTIZbNUfDbE-svSzhIYYl1eT6t89YqFbrYNZbCahVPZstLzrPiUgmGQ%3D%3D?uid=0&filename=1.jpg&disposition=inline&hash=&limit=0&content_type=image%2Fjpeg&owner_uid=0&tknv=v2&size=2048x2048\" />"
-
-        "</td>" +
+            "<td width=\"50%\"><b>" + userName + "</b>" +
+            "</td>" +
             "<td width=\"50%\" align=\"right\">" + now.toLocaleString("ru", {
                 year: '2-digit', month: '2-digit', day: '2-digit',
                 hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -104,7 +102,7 @@
         data.append("userId", "0");
         //TODO Потом тут будут разные комнаты
         data.append("roomId", "1");
-        data.append("userName", userName);
+        data.append("author.name", userName);
         data.append("MessageDate", new Date());
         var xhr = new XMLHttpRequest();
 

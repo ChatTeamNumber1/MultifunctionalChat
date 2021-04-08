@@ -32,11 +32,11 @@ namespace MultifunctionalChat.Migrations
                 columns: new[] { "Id", "Name", "ImageAddress" },
                 values: new object[,]
                 {
-                    { 1, "Администратор", "https://bit.ly/2PIHwYO"},
-                    { 2, "Модератор", "https://bit.ly/3mr9GU2"},
-                    { 3, "Пользователь", "https://bit.ly/3wEelqg"},
-                    { 4, "Заблокированный пользователь", "https://bit.ly/31WIpQ6"},
-                    { 5, "Владелец комнаты", "https://bit.ly/3d0l7z7" }
+                    { 1, "Администратор", "https://drive.google.com/uc?export=view&id=12Fk7iS2hRwLFiOLYfX8ynAzEi2EJ9uw4"},
+                    { 2, "Модератор", "https://drive.google.com/uc?export=view&id=1aSVPQjKiG0ryGFUF2g2DpKn0yLy1MCPO"},
+                    { 3, "Пользователь", "https://drive.google.com/uc?export=view&id=113g5m-BHZkoBPAaj1yWztXpQUG0t6DSf"},
+                    { 4, "Заблокированный пользователь", "https://drive.google.com/uc?export=view&id=1yXaC2hF-xTM2KXzyf8cuRZB7Kn4ZnUYx"},
+                    { 5, "Владелец комнаты", "https://drive.google.com/uc?export=view&id=15LtbyhmvYjGxh-b7r-SjIBdUq6QBjl-C" }
                 });
 
             migrationBuilder.UpdateData(

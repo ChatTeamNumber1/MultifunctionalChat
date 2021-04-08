@@ -25,7 +25,7 @@ namespace MultifunctionalChat.Models
             builder.SetBasePath(Directory.GetCurrentDirectory());
             builder.AddJsonFile("appsettings.json");
             var config = builder.Build();
-            string connectionString = config.GetConnectionString("LocalConnection");
+            string connectionString = config.GetConnectionString("RemoteConnection");
             optionsBuilder.UseNpgsql(connectionString);
         }
     }
