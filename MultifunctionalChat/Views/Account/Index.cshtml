@@ -32,7 +32,7 @@
 
                 <br />
 
-
+                <h3>История сообщений</h3>
                 <div id="chatroom" style="width:100%; height: 400px; overflow-y:scroll"></div>
 
                 <br />
@@ -70,7 +70,8 @@
         let elem = document.createElement("p");
         elem.innerHTML =
             "<p><table width=\"100%\"><tbody><tr>" +
-            "<td width=\"50%\"><b>" + userName + "</b></td>" +
+            "<td width=\"50%\"><b>" + userName + "</b>" +
+            "</td>" +
             "<td width=\"50%\" align=\"right\">" + now.toLocaleString("ru", {
                 year: '2-digit', month: '2-digit', day: '2-digit',
                 hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -101,7 +102,7 @@
         data.append("userId", "0");
         //TODO Потом тут будут разные комнаты
         data.append("roomId", "1");
-        data.append("userName", userName);
+        data.append("author.name", userName);
         data.append("MessageDate", new Date());
         var xhr = new XMLHttpRequest();
 
