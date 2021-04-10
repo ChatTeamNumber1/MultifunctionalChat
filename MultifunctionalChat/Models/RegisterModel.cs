@@ -8,20 +8,20 @@ namespace MultifunctionalChat.Models
 {
     public class RegisterModel
     {
-        [Required]
+        [Required(ErrorMessage = "Не указано имя")]
         [Display(Name = "Имя")]
         public string Name { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Не указан логин")]
         [Display(Name = "Логин")]
         public string Login { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Не указан пароль")]
         [DataType(DataType.Password)]
         [Display(Name = "Пароль")]
         public string Password { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Не указан пароль")]
         [Compare("Password", ErrorMessage = "Пароли не совпадают")]
         [DataType(DataType.Password)]
         [Display(Name = "Подтвердить пароль")]

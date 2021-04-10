@@ -86,7 +86,7 @@ namespace MultifunctionalChat.Controllers
         {
             if (ModelState.IsValid)
             {
-                User user = new User { Name = model.Name, Login = model.Login, Password = model.Password, RoleId = 3 };
+                User user = new User { Name = model.Name, Login = model.Login, Password = EncryptPassword(model.Password), RoleId = 3 };
                 // добавляем пользователя
                 if (service.GetList().FirstOrDefault(x => x.Login == model.Login) == null)
                 {
