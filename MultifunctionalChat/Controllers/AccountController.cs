@@ -75,5 +75,28 @@ namespace MultifunctionalChat.Controllers
                 ClaimsIdentity.DefaultRoleClaimType);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
         }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                User user = new User { Name = model.Name, Login = model.Login, Password = model.Password, RoleId = 3 };
+                // добавляем пользователя
+                service.Create(user);
+
+                if (user != null)
+                {
+                    await Authenticate(user); // аутентификация
+                    return RedirectToAction("Index", "Account");// переадресация на метод Index
+                }
+            }
+            return View(model);
+        }
     }
 }
