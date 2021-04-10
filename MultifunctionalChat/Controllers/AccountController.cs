@@ -88,13 +88,13 @@ namespace MultifunctionalChat.Controllers
             {
                 User user = new User { Name = model.Name, Login = model.Login, Password = model.Password, RoleId = 3 };
                 // добавляем пользователя
-                service.Create(user);
-
-                if (user != null)
+                if (service.GetList().FirstOrDefault(x => x.Login == model.Login) == null)
                 {
+                    service.Create(user);
                     await Authenticate(user); // аутентификация
                     return RedirectToAction("Index", "Account");// переадресация на метод Index
                 }
+                ModelState.AddModelError("", "Пользователь с таким логином уже существует");
             }
             return View(model);
         }
