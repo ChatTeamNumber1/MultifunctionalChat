@@ -34,6 +34,7 @@ namespace MultifunctionalChat
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<IRepository<User>, UserService>();
             services.AddTransient<IRepository<Message>, MessageService>();
+            services.AddTransient<IRepository<Room>, RoomService>();
             services.AddSignalR();
             services.AddControllers();
             services.AddReact(); 

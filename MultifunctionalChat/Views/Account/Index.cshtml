@@ -1,4 +1,5 @@
-﻿<head>
+﻿@using MultifunctionalChat.Models;
+<head>
     <meta charset="utf-8" />
     <title>Лучший чат от сильнейшей команды мира</title>
 </head>
@@ -9,11 +10,11 @@
             <td width="25%" style="vertical-align:top">
                 <h3>Доступные комнаты</h3>
                 <br />
-                <h3>Комната1</h3>
-                <br />
-                <h3>Комната2</h3>
-                <br />
-                <h3>Комната3</h3>
+                @foreach (Room chatRoom in ViewBag.chatRooms)
+                {
+                    <h3>@chatRoom.Name</h3>
+                    <br />
+                }
             </td>
             <td width="75%">
                 <div id="header"></div>
