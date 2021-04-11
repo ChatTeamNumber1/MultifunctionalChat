@@ -16,10 +16,14 @@ namespace MultifunctionalChat.Controllers
     public class AccountController : Controller
     {
         private IRepository<User> service;
-        public AccountController(IRepository<User> context)
+        private readonly IRepository<Room> _roomService;
+
+        public AccountController(IRepository<User> context, IRepository<Room> roomService)
         {
             service = context;
+            _roomService = roomService;
         }
+
 
         public static string EncryptPassword(string Password)
         {
@@ -35,8 +39,12 @@ namespace MultifunctionalChat.Controllers
         }
 
         // тестирование SignalR
+
         public IActionResult Index()
         {
+            var chatRooms = _roomService.GetList();
+            ViewBag.chatRooms = chatRooms;
+
             return View();
         }
         [HttpGet]
