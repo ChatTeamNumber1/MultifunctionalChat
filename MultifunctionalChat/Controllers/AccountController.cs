@@ -84,6 +84,27 @@ namespace MultifunctionalChat.Controllers
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
         }
 
-
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                User user = new User { Name = model.Name, Login = model.Login, Password = EncryptPassword(model.Password), RoleId = 3 };
+                // добавляем пользователя
+                if (service.GetList().FirstOrDefault(x => x.Login == model.Login) == null)
+                {
+                    service.Create(user);
+                    await Authenticate(user); // аутентификация
+                    return RedirectToAction("Index", "Account");// переадресация на метод Index
+                }
+                ModelState.AddModelError("", "Пользователь с таким логином уже существует");
+            }
+            return View(model);
+        }
     }
 }

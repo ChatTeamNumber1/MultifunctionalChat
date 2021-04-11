@@ -7,6 +7,7 @@ namespace MultifunctionalChat.Models
     public class ApplicationContext : DbContext
     {
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Role> Roles { get; set; }
         public DbSet<Room> Rooms { get; set; }
         public DbSet<RoomMember> RoomMembers { get; set; }
         public DbSet<User> Users { get; set; }

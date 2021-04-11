@@ -16,7 +16,7 @@ namespace MultifunctionalChat.Models
         public int RoomId { get; set; }
 
         [NotMapped]
-        public string UserName { get; set; }
+        public User Author { get; set; }
 
         public DateTime MessageDate { get; set; }
     }
