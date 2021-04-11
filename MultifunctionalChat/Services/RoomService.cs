@@ -35,7 +35,6 @@ namespace MultifunctionalChat.Services
                 _context.Rooms.Add(newRoom);
                 _context.SaveChanges();
                 transaction.Commit();
-                _roomsList.Add(newRoom);
             }
             catch (Exception)
             {
@@ -74,7 +73,6 @@ namespace MultifunctionalChat.Services
                 _context.Rooms.Remove(roomToDelete);
                 _context.SaveChanges();
                 transaction.Commit();
-                _roomsList.Remove(roomToDelete);
             }
             catch (Exception)
             {

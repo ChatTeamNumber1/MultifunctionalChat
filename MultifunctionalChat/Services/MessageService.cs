@@ -45,7 +45,6 @@ namespace MultifunctionalChat.Services
                 context.Messages.Add(newMessage);
                 context.SaveChanges();
                 transaction.Commit();
-                messagesList.Add(newMessage);
             }
             catch (Exception)
             {
@@ -83,7 +82,6 @@ namespace MultifunctionalChat.Services
                 context.Messages.Remove(messageToDelete);
                 context.SaveChanges();
                 transaction.Commit();
-                messagesList.Remove(messageToDelete);
             }
             catch (Exception)
             {

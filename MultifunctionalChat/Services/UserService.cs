@@ -33,7 +33,6 @@ namespace MultifunctionalChat.Services
                 context.Users.Add(newUser);
                 context.SaveChanges();
                 transaction.Commit();
-                usersList.Add(newUser);
             }
             catch (Exception)
             {
@@ -71,7 +70,6 @@ namespace MultifunctionalChat.Services
                 context.Users.Remove(userToDelete);
                 context.SaveChanges();
                 transaction.Commit();
-                usersList.Remove(userToDelete);
             }
             catch (Exception)
             {
