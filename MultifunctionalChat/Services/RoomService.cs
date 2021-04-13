@@ -14,6 +14,19 @@ namespace MultifunctionalChat.Services
         {
             _context = context;
             _roomsList = _context.Rooms.ToList();
+
+            foreach (var room in _roomsList)
+            {
+                List<RoomMember> membersList = context.RoomMembers.Where(member => member.RoomId == room.Id).ToList();
+                List<User> usersList = new List<User>();
+
+                foreach (var member in membersList)
+                {
+                    usersList.Add(context.Users.Where(us => us.Id == member.UserId).FirstOrDefault());
+                }
+                usersList = usersList.Distinct().ToList();
+                room.MembersList = usersList;
+            }
         }
 
          public List<Room> GetList()

@@ -62,7 +62,7 @@ namespace MultifunctionalChat.Controllers
                 if (user != null)
                 {
                     await Authenticate(user); // аутентификация
-                    return RedirectToAction("Index", "Account");// переадресация на метод Index
+                    return RedirectToAction("Index", "Room", "3");// переадресация на метод Index
                 }
                 ModelState.AddModelError("", "Некорректные логин и(или) пароль");
             }
@@ -77,7 +77,7 @@ namespace MultifunctionalChat.Controllers
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimsIdentity.DefaultNameClaimType, user.Name)
+                new Claim(ClaimsIdentity.DefaultNameClaimType, user.Login)
             };
             ClaimsIdentity id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType,
                 ClaimsIdentity.DefaultRoleClaimType);
@@ -100,7 +100,7 @@ namespace MultifunctionalChat.Controllers
                 {
                     service.Create(user);
                     await Authenticate(user); // аутентификация
-                    return RedirectToAction("Index", "Account");// переадресация на метод Index
+                    return RedirectToAction("Index", "Room", "3");// переадресация на метод Index
                 }
                 ModelState.AddModelError("", "Пользователь с таким логином уже существует");
             }

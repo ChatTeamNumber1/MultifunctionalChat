@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MultifunctionalChat.Models;
@@ -6,15 +7,32 @@ using MultifunctionalChat.Services;
 
 namespace MultifunctionalChat.Controllers
 {
-    public class RoomController : ControllerBase
+    public class RoomController : Controller
     {
         private readonly IRepository<Room> _roomService;
-        private readonly ILogger<RoomController> _logger;
+        private readonly IRepository<User> _userService;
+        private readonly ILogger<MessageController> _logger;
 
-        public RoomController (IRepository<Room> roomService, ILogger<RoomController> logger)
+        public RoomController (IRepository<Room> roomService, IRepository<User> userService, ILogger<MessageController> logger)
         {
-            _roomService = roomService;
             _logger = logger;
+            _roomService = roomService;
+            _userService = userService;
+        }
+        public IActionResult Index(string roomId)
+        {
+            ViewBag.roomId = roomId;
+
+            var users = _userService.GetList();
+            ViewBag.users = users;
+
+            var currentUser = users.Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+            ViewBag.currentUser = currentUser;
+
+            var chatRooms = _roomService.GetList().Where(room => room.MembersList.Contains(currentUser)).ToList();
+            ViewBag.chatRooms = chatRooms;
+
+            return View();
         }
 
         [HttpGet]
