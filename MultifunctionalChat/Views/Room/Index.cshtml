@@ -67,7 +67,6 @@
     // получение сообщения от сервера
     hubConnection.on('Send', function (message, userName) {
         if (userName == "") {
-            alert('w');
             return;
         }
 
@@ -100,21 +99,41 @@
     // отправка сообщения на сервер
     document.getElementById("sendBtn").addEventListener("click", function (e) {
         if (userName == "") {
-            alert('1');
             return;
         }
+
         let message = document.getElementById("message").value;
-        hubConnection.invoke("Send", message, userName);
+        if (message.startsWith('room') || message.startsWith('/room')) {
+            alert('Может, вы имели в виду //room');
+            return;
+        }
+        else if (message.startsWith('user') || message.startsWith('/user')) {
+            alert('Может, вы имели в виду //user');
+            return;
+        }
+        else if (message.startsWith('//')) {
 
-        const data = new FormData();
-        data.append("text", message);
-        data.append("userId", @ViewBag.currentUser.Id);
-        data.append("roomId", @ViewBag.currentUser.RoleId);
-        data.append("MessageDate", new Date());
-        var xhr = new XMLHttpRequest();
+            var messageParts = message.split(' ');
+            console.log(messageParts);
+            //Здесь обработка команд
+        }
 
-        xhr.open("post", "/message", true);
-        xhr.send(data);
+        //Обычное сообщение
+        else {
+
+
+            hubConnection.invoke("Send", message, userName);
+
+            const data = new FormData();
+            data.append("text", message);
+            data.append("userId", @ViewBag.currentUser.Id);
+            data.append("roomId", @ViewBag.roomId);
+            data.append("MessageDate", new Date());
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("post", "/message", true);
+            xhr.send(data);
+        }
     });
 
     hubConnection.start();
