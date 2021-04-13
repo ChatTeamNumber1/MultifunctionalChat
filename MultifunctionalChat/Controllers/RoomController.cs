@@ -19,9 +19,9 @@ namespace MultifunctionalChat.Controllers
             _roomService = roomService;
             _userService = userService;
         }
-        public IActionResult Index(string roomId)
+        public IActionResult Index(string id)
         {
-            ViewBag.roomId = roomId;
+            ViewBag.roomId = id;
 
             var users = _userService.GetList();
             ViewBag.users = users;

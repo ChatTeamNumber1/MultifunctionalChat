@@ -62,7 +62,7 @@ namespace MultifunctionalChat.Controllers
                 if (user != null)
                 {
                     await Authenticate(user); // аутентификация
-                    return RedirectToAction("Index", "Room", "3");// переадресация на метод Index
+                    return RedirectToAction("Index", "Room", new { id = StaticVars.DEFAULT_ROOM_ID });// переадресация на метод Index
                 }
                 ModelState.AddModelError("", "Некорректные логин и(или) пароль");
             }
@@ -100,7 +100,7 @@ namespace MultifunctionalChat.Controllers
                 {
                     service.Create(user);
                     await Authenticate(user); // аутентификация
-                    return RedirectToAction("Index", "Room", "3");// переадресация на метод Index
+                    return RedirectToAction("Index", "Room", StaticVars.DEFAULT_ROOM_ID);// переадресация на метод Index
                 }
                 ModelState.AddModelError("", "Пользователь с таким логином уже существует");
             }

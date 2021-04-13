@@ -41,8 +41,8 @@ namespace MultifunctionalChat.Services
             try
             {
                 //TODO Айдишник может и должен прилетать с клиентской стороны (и вообще это нарушение Single Responsibility)
-                User user = context.Users.Where(user => user.Name == newMessage.Author.Name).FirstOrDefault();
-                newMessage.UserId = user.Id;
+                //User user = context.Users.Where(user => user.Name == newMessage.Author.Name).FirstOrDefault();
+                //newMessage.UserId = user.Id;
                 newMessage.MessageDate = DateTime.Now;
 
                 context.Messages.Add(newMessage);

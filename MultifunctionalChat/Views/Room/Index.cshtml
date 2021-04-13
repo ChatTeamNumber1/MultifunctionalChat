@@ -16,7 +16,9 @@
                     <br />
                 }
                 @ViewBag.roomId
-                <br/>
+                <br />
+                @ViewBag.currentUser.UserRole.Name
+                <br />
             </td>
             <td width="75%">
                 <div id="header"></div>
@@ -36,7 +38,7 @@
                 <br />
 
                 <h3>История сообщений</h3>
-                <div id="chatroom" style="width:100%; height: 400px; overflow-y:scroll"></div>
+                <div id="chatroom" data-roomId="@ViewBag.roomId" style="width:100%; height: 400px; overflow-y:scroll"></div>
 
                 <br />
 
@@ -65,6 +67,7 @@
     // получение сообщения от сервера
     hubConnection.on('Send', function (message, userName) {
         if (userName == "") {
+            alert('w');
             return;
         }
 
@@ -73,8 +76,11 @@
         let elem = document.createElement("p");
         elem.innerHTML =
             "<p><table width=\"100%\"><tbody><tr>" +
-            "<td width=\"50%\"><b>" + userName + "</b>" +
-            "</td>" +
+                "<td width=\"50%\">" +
+                    "<b>" + userName + "</b>" +
+                    "&nbsp;&nbsp;&nbsp;"+
+                    "<img title=\"@ViewBag.currentUser.UserRole.Name\" height=\"20\" src=\"@ViewBag.currentUser.UserRole.ImageAddress\" />" +
+                "</td>" +
             "<td width=\"50%\" align=\"right\">" + now.toLocaleString("ru", {
                 year: '2-digit', month: '2-digit', day: '2-digit',
                 hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -94,6 +100,7 @@
     // отправка сообщения на сервер
     document.getElementById("sendBtn").addEventListener("click", function (e) {
         if (userName == "") {
+            alert('1');
             return;
         }
         let message = document.getElementById("message").value;
@@ -101,11 +108,8 @@
 
         const data = new FormData();
         data.append("text", message);
-        //TODO Пользователя пока можно и на сервере вычислить, но лучше передавать сюда вместе с логином
-        data.append("userId", "0");
-        //TODO Потом тут будут разные комнаты
-        data.append("roomId", "1");
-        data.append("author.name", userName);
+        data.append("userId", @ViewBag.currentUser.Id);
+        data.append("roomId", @ViewBag.currentUser.RoleId);
         data.append("MessageDate", new Date());
         var xhr = new XMLHttpRequest();
 
