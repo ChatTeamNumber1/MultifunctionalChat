@@ -8,19 +8,43 @@ using MultifunctionalChat.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace MultifunctionalChat.Controllers
 {
     public class AccountController : Controller
     {
         private IRepository<User> service;
-        public AccountController(IRepository<User> context)
+        private readonly IRepository<Room> _roomService;
+
+        public AccountController(IRepository<User> context, IRepository<Room> roomService)
         {
             service = context;
+            _roomService = roomService;
         }
+
+
+        public static string EncryptPassword(string Password)
+        {
+            var data = Encoding.UTF8.GetBytes(Password);
+            using (SHA512 shaM = new SHA512Managed())
+            {
+                var hashedInputBytes = shaM.ComputeHash(data);
+                var hashedInputStringBuilder = new StringBuilder(128);
+                foreach (var b in hashedInputBytes)
+                    hashedInputStringBuilder.Append(b.ToString("X2"));
+                return hashedInputStringBuilder.ToString();
+            }
+        }
+
         // тестирование SignalR
+
         public IActionResult Index()
         {
+            var chatRooms = _roomService.GetList();
+            ViewBag.chatRooms = chatRooms;
+
             return View();
         }
         [HttpGet]
@@ -34,7 +58,7 @@ namespace MultifunctionalChat.Controllers
         {
             if (ModelState.IsValid)
             {
-                User user = service.GetList().FirstOrDefault(x => x.Login == model.Login);
+                User user = service.GetList().FirstOrDefault(x => x.Login == model.Login && x.Password == EncryptPassword(model.Password));
                 if (user != null)
                 {
                     await Authenticate(user); // аутентификация
@@ -58,6 +82,29 @@ namespace MultifunctionalChat.Controllers
             ClaimsIdentity id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType,
                 ClaimsIdentity.DefaultRoleClaimType);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
+        }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                User user = new User { Name = model.Name, Login = model.Login, Password = EncryptPassword(model.Password), RoleId = 3 };
+                // добавляем пользователя
+                if (service.GetList().FirstOrDefault(x => x.Login == model.Login) == null)
+                {
+                    service.Create(user);
+                    await Authenticate(user); // аутентификация
+                    return RedirectToAction("Index", "Account");// переадресация на метод Index
+                }
+                ModelState.AddModelError("", "Пользователь с таким логином уже существует");
+            }
+            return View(model);
         }
     }
 }

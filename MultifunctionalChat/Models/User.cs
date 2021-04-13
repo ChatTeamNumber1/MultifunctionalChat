@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MultifunctionalChat.Models
 {
@@ -10,7 +7,13 @@ namespace MultifunctionalChat.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string Login { get; set; }
+        public string Password { get; set; }
 
-        //ToDo Role, Password, Avatar (или аватар роли)
+        [ForeignKey("Role")]
+        public int RoleId { get; set; }
+
+        [NotMapped]
+        public Role UserRole { get; set; }
+        //ToDo Avatar (или аватар роли)
     }
 }
