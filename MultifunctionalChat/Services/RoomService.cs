@@ -18,6 +18,7 @@ namespace MultifunctionalChat.Services
             foreach (var room in _roomsList)
             {
                 room.Users = context.Users.Where(rm => rm.Rooms.Contains(room)).ToList();
+                room.RoomUsers = context.RoomUsers.Where(rm => rm.Room == room).ToList();
             }
         }
 
@@ -59,8 +60,8 @@ namespace MultifunctionalChat.Services
                 newContext.SaveChanges();
 
                 transaction.Commit();
-                int roomIndex = _roomsList.IndexOf(Get(updatedRoom.Id));
-                _roomsList[roomIndex] = updatedRoom;
+                //int roomIndex = _roomsList.IndexOf(Get(updatedRoom.Id));
+                //_roomsList[roomIndex] = updatedRoom;
             }
             catch (Exception)
             {

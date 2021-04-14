@@ -8,16 +8,22 @@ using MultifunctionalChat.Services;
 
 namespace MultifunctionalChat.Controllers
 {
-    public class MessageController : Controller
+    [Route("[controller]")]
+    public class MessageController : ControllerBase
     {
         private readonly IRepository<Message> messageService;
         private readonly IRepository<Room> roomService;
+        private readonly IRepository<RoomUser> roomUserService;
+        private readonly IRepository<User> userService;
         private readonly ILogger<MessageController> logger;
 
-        public MessageController(IRepository<Message> messageService, IRepository<Room> roomService, ILogger<MessageController> logger)
+        public MessageController(IRepository<Message> messageService, IRepository<Room> roomService,
+            IRepository<User> userService, IRepository<RoomUser> roomUserService, ILogger<MessageController> logger)
         {
             this.messageService = messageService;
             this.roomService = roomService;
+            this.roomUserService = roomUserService;
+            this.userService = userService;
             this.logger = logger;
         }
 
@@ -60,7 +66,7 @@ namespace MultifunctionalChat.Controllers
                         //Тут через || идут названия двух комнат.
                         string trimmedMessage = message.Text.Replace("//room", "").Replace("rename", "").Trim();
                         string[] renamedParts = trimmedMessage.Split(new string[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
-                        
+
                         //TODO Проверку ошибок бы всю в одно место, а то разбросало...
                         if (renamedParts.Length < 2)
                         {
@@ -71,7 +77,9 @@ namespace MultifunctionalChat.Controllers
 
                         var roomToRename = roomService.GetList().Where(
                             room => room.Name == renamedParts[0].Trim()).FirstOrDefault();
-                        
+                        var userTryingToRename = userService.GetList().Where(
+                            user => user.Name == renamedParts[1].Trim()).FirstOrDefault();
+
                         if (roomToRename == null)
                         {
                             result = $"Неверное название комнаты";
@@ -79,7 +87,8 @@ namespace MultifunctionalChat.Controllers
                             return Ok(result);
                         }
                         //TODO Тут бы еще и на администратора проверить
-                        else if (message.UserId != roomToRename.OwnerId)
+                        else if (message.UserId != roomToRename.OwnerId && 
+                            userTryingToRename.RoleId.ToString() != StaticVars.ROLE_ADMIN)
                         {
                             result = $"Недостаточно прав для переименования комнаты с id = {roomToRename.Id}";
                             logger.LogInformation(result);
@@ -89,7 +98,54 @@ namespace MultifunctionalChat.Controllers
                         string newRoomName = renamedParts[1].Trim();
                         roomToRename.Name = newRoomName;
                         roomService.Update(roomToRename);
-                        result = $"Обновлены данные о комнате с id = {roomToRename.Id}";                        
+                        result = $"Обновлены данные о комнате с id = {roomToRename.Id}";
+                    }
+                    else if (messageParts.Length > 1 && messageParts[1] == "connect")
+                    {
+                        //Тут через || идут названия двух комнат.
+                        string trimmedMessage = message.Text.Replace("//room", "").Replace("connect", "").Trim();
+                        string[] connectedParts = trimmedMessage.Split(new string[] { " -l " }, StringSplitOptions.RemoveEmptyEntries);
+
+                        //TODO Проверку ошибок бы всю в одно место, а то разбросало...
+                        if (connectedParts.Length < 2)
+                        {
+                            result = "Неверный формат сообщения (не найден флаг -l)";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+
+                        var roomToConnect = roomService.GetList().Where(
+                            room => room.Name == connectedParts[0].Trim()).FirstOrDefault();
+                        var userToConnect = userService.GetList().Where(
+                            user => user.Name == connectedParts[1].Trim()).FirstOrDefault();
+
+                        if (roomToConnect == null)
+                        {
+                            result = $"Неверное название комнаты";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        else if (userToConnect == null)
+                        {
+                            result = $"Неверное имя пользователя";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        //TODO Тут бы еще и на администратора проверить
+                        else if (message.UserId != roomToConnect.OwnerId)
+                        {
+                            result = $"Недостаточно прав для добавления в комнату с id = {roomToConnect.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+
+
+
+                        //roomToConnect.RoomUsers.Add(new RoomUser { Room = roomToConnect, User = userToConnect });
+                        //roomToConnect.Users.Add(userToConnect);
+                        //roomService.Update(roomToConnect);
+                        roomUserService.Create(new RoomUser { RoomsId = roomToConnect.Id, Room = roomToConnect, User = userToConnect, UsersId = userToConnect.Id });
+                        result = $"Обновлены данные о комнате с id = {roomToConnect.Id}";
                     }
                 }
                 else
