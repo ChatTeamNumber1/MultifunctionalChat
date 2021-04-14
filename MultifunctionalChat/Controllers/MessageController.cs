@@ -58,8 +58,7 @@ namespace MultifunctionalChat.Controllers
                 {
                     if (messageParts.Length > 1 && messageParts[1] == "rename")
                     {
-                        //Тут через пробел идут названия двух комнат. 
-                        //Извращения вызваны тем, что названия и сами могут содержать пробелы
+                        //Тут через || идут названия двух комнат.
                         string trimmedMessage = message.Text.Replace("//room", "").Replace("rename", "").Trim();
                         string[] renamedParts = trimmedMessage.Split(new string[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
                         
