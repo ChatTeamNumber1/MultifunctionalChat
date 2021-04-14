@@ -8,7 +8,8 @@
     // загрузка данных
     loadData() {
         var xhr = new XMLHttpRequest();
-        xhr.open("get", "/message", true);
+        var roomId = document.getElementById("chatroom").getAttribute("data-roomId");
+        xhr.open("get", "/messageslist/" + roomId, true);
 
         xhr.onload = function () {
             var data = JSON.parse(xhr.responseText);
