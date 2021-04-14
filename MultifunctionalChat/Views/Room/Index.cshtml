@@ -111,29 +111,22 @@
             alert('Может, вы имели в виду //user');
             return;
         }
-        else if (message.startsWith('//')) {
 
-            var messageParts = message.split(' ');
-            console.log(messageParts);
-            //Здесь обработка команд
-        }
-
-        //Обычное сообщение
-        else {
-
-
+        //Обычное сообщение еще и в чатике на фронте отображаем
+        if (!message.startsWith('//')) {
             hubConnection.invoke("Send", message, userName);
-
-            const data = new FormData();
-            data.append("text", message);
-            data.append("userId", @ViewBag.currentUser.Id);
-            data.append("roomId", @ViewBag.roomId);
-            data.append("MessageDate", new Date());
-            var xhr = new XMLHttpRequest();
-
-            xhr.open("post", "/message", true);
-            xhr.send(data);
         }
+
+        //TODO Необычные сообщения тоже должны отображаться на фронте (ну там список комнат обновляется)
+        const data = new FormData();
+        data.append("text", message);
+        data.append("userId", @ViewBag.currentUser.Id);
+        data.append("roomId", @ViewBag.roomId);
+        data.append("MessageDate", new Date());
+        var xhr = new XMLHttpRequest();
+
+        xhr.open("post", "/message", true);
+        xhr.send(data);
     });
 
     hubConnection.start();
