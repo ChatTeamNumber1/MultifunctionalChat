@@ -22,6 +22,8 @@ namespace MultifunctionalChat.Controllers
         public IActionResult Index(string id)
         {
             ViewBag.roomId = id;
+            var currentRoom = _roomService.GetList().Where(room => room.Id.ToString() == id).FirstOrDefault();
+            ViewBag.room = currentRoom;
 
             var users = _userService.GetList();
             ViewBag.users = users;
@@ -29,8 +31,11 @@ namespace MultifunctionalChat.Controllers
             var currentUser = users.Where(us => us.Login == User.Identity.Name).FirstOrDefault();
             ViewBag.currentUser = currentUser;
 
-            var chatRooms = _roomService.GetList().Where(room => room.MembersList.Contains(currentUser)).ToList();
+            var chatRooms = _roomService.GetList().Where(room => room.Users.Contains(currentUser)).ToList();
             ViewBag.chatRooms = chatRooms;
+
+            var roomUsers = _userService.GetList().Where(user => user.Rooms.Contains(currentRoom)).ToList();
+            ViewBag.roomUsers = roomUsers;
 
             return View();
         }

@@ -15,8 +15,9 @@ namespace MultifunctionalChat.Models
         public int OwnerId { get; set; }
         //Общая (больше 2 людей) или приватная
         public bool IsPublic { get; set; }
-        //Все пользователи (из таблицы RoomMembers)
-        [NotMapped]
-        public List<User> MembersList { get; set; }
+
+        //Все пользователи
+        public List<User> Users { get; set; }
+        public List<RoomUser> RoomUsers { get; set; }
     }
 }

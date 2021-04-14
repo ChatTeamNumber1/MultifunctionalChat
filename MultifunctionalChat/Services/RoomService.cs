@@ -17,19 +17,11 @@ namespace MultifunctionalChat.Services
 
             foreach (var room in _roomsList)
             {
-                List<RoomMember> membersList = context.RoomMembers.Where(member => member.RoomId == room.Id).ToList();
-                List<User> usersList = new List<User>();
-
-                foreach (var member in membersList)
-                {
-                    usersList.Add(context.Users.Where(us => us.Id == member.UserId).FirstOrDefault());
-                }
-                usersList = usersList.Distinct().ToList();
-                room.MembersList = usersList;
+                room.Users = context.Users.Where(rm => rm.Rooms.Contains(room)).ToList();
             }
         }
 
-         public List<Room> GetList()
+        public List<Room> GetList()
         {
             return _roomsList;
         }       

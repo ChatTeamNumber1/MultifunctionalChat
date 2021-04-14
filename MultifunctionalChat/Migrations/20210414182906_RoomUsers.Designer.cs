@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MultifunctionalChat.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -9,9 +10,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MultifunctionalChat.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20210414182906_RoomUsers")]
+    partial class RoomUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -136,10 +138,10 @@ namespace MultifunctionalChat.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("RoomUser");
+                    b.ToTable("RoomUsers");
                 });
 
-            modelBuilder.Entity("RoomUsers", b =>
+            modelBuilder.Entity("RoomUser", b =>
                 {
                     b.HasOne("MultifunctionalChat.Models.Room", null)
                         .WithMany()

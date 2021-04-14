@@ -1,7 +1,7 @@
 ﻿@using MultifunctionalChat.Models;
 <head>
     <meta charset="utf-8" />
-    <title>Лучший чат от сильнейшей команды мира</title>
+    <title>Комната "@ViewBag.room.Name"</title>
 </head>
 
 <table width="100%">
@@ -13,7 +13,14 @@
                 @foreach (Room chatRoom in ViewBag.chatRooms)
                 {
                     <h3>@chatRoom.Name</h3>
-                    <br />
+                }
+                <br />
+                <br />
+                <h3>Список пользователей комнаты</h3>
+                <br />
+                @foreach (var user in ViewBag.roomUsers)
+                {
+                    <h4>@user.Name</h4>
                 }
             </td>
             <td width="75%">

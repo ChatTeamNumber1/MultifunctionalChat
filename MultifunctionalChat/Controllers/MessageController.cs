@@ -8,8 +8,7 @@ using MultifunctionalChat.Services;
 
 namespace MultifunctionalChat.Controllers
 {
-    [Route("[controller]")]
-    public class MessageController : ControllerBase
+    public class MessageController : Controller
     {
         private readonly IRepository<Message> messageService;
         private readonly IRepository<Room> roomService;

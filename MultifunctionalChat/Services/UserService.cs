@@ -20,6 +20,7 @@ namespace MultifunctionalChat.Services
             {
                 Role role = context.Roles.Where(role => role.Id == user.RoleId).FirstOrDefault();
                 user.UserRole = role;
+                user.Rooms = context.Rooms.Where(rm => rm.Users.Contains(user)).ToList();                
             }
         }
         public List<User> GetList()
