@@ -37,10 +37,9 @@
 
     render() {
 
-        return <div>
-
+        return <div id="AllMessages">
             {this.state.messages.map(message =>
-                <p>
+                <div id={"message" + message.id}>
                     <table width="100%">
                         <tbody>
                             <tr>
@@ -53,8 +52,9 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p>{message.text}</p>
-                </p>
+                    <div>{message.text}</div>
+                    <br/>
+                </div>
             )}
         </div>;
     }

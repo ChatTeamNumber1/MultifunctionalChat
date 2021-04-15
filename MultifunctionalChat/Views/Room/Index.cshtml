@@ -52,6 +52,12 @@
 
 <script src="~/js/signalr/dist/browser/signalr.min.js"></script>
 <script>
+
+    window.setInterval(function () {
+        var elem = document.getElementById('chatroom');
+        elem.scrollTop = elem.scrollHeight;
+    }, 5000);
+
     const hubConnection = new signalR.HubConnectionBuilder()
         .withUrl("/chat")
         .build();
@@ -101,6 +107,10 @@
 
     // отправка сообщения на сервер
     document.getElementById("sendBtn").addEventListener("click", function (e) {
+
+        let now = new Date();
+        console.log("click");
+        console.log(now);
         if (userName == "") {
             return;
         }
@@ -137,8 +147,16 @@
                     hubConnection.invoke("RefreshUsers", "@ViewBag.roomId");
                 }
             }
-        }.bind(this);
+
+            now = new Date();
+            console.log("receive");
+            console.log(now);
+        };
         xhr.send(data);
+
+        now = new Date();
+        console.log("send");
+        console.log(now);
     });
 
     hubConnection.start();

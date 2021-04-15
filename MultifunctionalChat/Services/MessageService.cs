@@ -16,12 +16,18 @@ namespace MultifunctionalChat.Services
         {
             this.context = context;
             messagesList = context.Messages.ToList();
+            var UsersList = context.Users.ToList();
+            var RolesList = context.Roles.ToList();
 
             foreach (var message in messagesList)
             {
-                User user = context.Users.Where(user => user.Id == message.UserId).FirstOrDefault();
-                Role role = context.Roles.Where(role => role.Id == user.RoleId).FirstOrDefault();
-                user.UserRole = role;
+                User user = UsersList.Where(user => user.Id == message.UserId).FirstOrDefault();
+                if (user.UserRole == null)
+                {
+                    Role role = RolesList.Where(role => role.Id == user.RoleId).FirstOrDefault();
+                    user.UserRole = role;
+                }
+
                 message.Author = user;
             }
         }
