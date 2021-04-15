@@ -1,0 +1,10 @@
+﻿@using MultifunctionalChat.Models;
+
+<h3>Список пользователей комнаты</h3>
+<br />
+<div id="UsersList">
+    @foreach (var user in ViewBag.roomUsers)
+    {
+        <h4>@user.Name</h4>
+    }
+</div>

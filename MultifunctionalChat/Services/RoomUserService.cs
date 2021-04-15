@@ -34,7 +34,7 @@ namespace MultifunctionalChat.Services
                 context.SaveChanges();
                 transaction.Commit();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 transaction.Rollback();
             }

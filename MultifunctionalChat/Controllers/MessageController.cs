@@ -72,27 +72,25 @@ namespace MultifunctionalChat.Controllers
                         {
                             result = "Неверный формат сообщения (не найдены ||)";
                             logger.LogInformation(result);
-                            return Ok(result);
+                            return NotFound(result);
                         }
 
                         var roomToRename = roomService.GetList().Where(
                             room => room.Name == renamedParts[0].Trim()).FirstOrDefault();
-                        var userTryingToRename = userService.GetList().Where(
-                            user => user.Name == renamedParts[1].Trim()).FirstOrDefault();
+                        var userTryingToRename = userService.Get(message.UserId);
 
                         if (roomToRename == null)
                         {
                             result = $"Неверное название комнаты";
                             logger.LogInformation(result);
-                            return Ok(result);
+                            return NotFound(result);
                         }
-                        //TODO Тут бы еще и на администратора проверить
                         else if (message.UserId != roomToRename.OwnerId && 
                             userTryingToRename.RoleId.ToString() != StaticVars.ROLE_ADMIN)
                         {
-                            result = $"Недостаточно прав для переименования комнаты с id = {roomToRename.Id}";
+                            result = $"Недостаточно прав для переименования комнаты {roomToRename.Name}";
                             logger.LogInformation(result);
-                            return Ok(result);
+                            return NotFound(result);
                         }
 
                         string newRoomName = renamedParts[1].Trim();
@@ -118,6 +116,7 @@ namespace MultifunctionalChat.Controllers
                             room => room.Name == connectedParts[0].Trim()).FirstOrDefault();
                         var userToConnect = userService.GetList().Where(
                             user => user.Name == connectedParts[1].Trim()).FirstOrDefault();
+                        var userTryingToRunCommand = userService.Get(message.UserId);
 
                         if (roomToConnect == null)
                         {
@@ -131,8 +130,8 @@ namespace MultifunctionalChat.Controllers
                             logger.LogInformation(result);
                             return Ok(result);
                         }
-                        //TODO Тут бы еще и на администратора проверить
-                        else if (message.UserId != roomToConnect.OwnerId)
+                        else if (message.UserId != roomToConnect.OwnerId &&
+                            userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_ADMIN)
                         {
                             result = $"Недостаточно прав для добавления в комнату с id = {roomToConnect.Id}";
                             logger.LogInformation(result);

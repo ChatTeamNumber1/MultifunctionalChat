@@ -12,10 +12,12 @@
         xhr.open("get", "/messageslist/" + roomId, true);
 
         xhr.onload = function () {
-            var data = JSON.parse(xhr.responseText);
-            this.setState({
-                messages: data
-            });
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText);
+                this.setState({
+                    messages: data
+                });
+            }
         }.bind(this);
         xhr.send();
     }

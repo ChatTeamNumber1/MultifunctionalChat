@@ -1,0 +1,10 @@
+﻿@using MultifunctionalChat.Models;
+
+<h3>Доступные комнаты</h3>
+<br />
+<div id="RoomsList">
+    @foreach (Room chatRoom in ViewBag.chatRooms)
+    {
+        <h3>@chatRoom.Name</h3>
+    }
+</div>

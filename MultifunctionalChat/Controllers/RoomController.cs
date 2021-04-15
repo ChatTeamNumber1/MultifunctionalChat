@@ -39,6 +39,18 @@ namespace MultifunctionalChat.Controllers
 
             return View();
         }
+        public ActionResult GetUsers()
+        {
+            /*var currentRoom = _roomService.GetList().Where(room => room.Id.ToString() == id).FirstOrDefault();            
+            var roomUsers = _userService.GetList().Where(user => user.Rooms.Contains(currentRoom)).ToList();
+            ViewBag.roomUsers = roomUsers;*/
+            
+            return PartialView("GetUsers");
+        }
+        public ActionResult GetRoomsForUser()
+        {
+            return PartialView("GetRoomsForUser");
+        }
 
         [HttpGet]
         public ActionResult<List<Room>> Get()

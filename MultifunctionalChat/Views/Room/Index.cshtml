@@ -8,20 +8,10 @@
     <tbody>
         <tr>
             <td width="25%" style="vertical-align:top">
-                <h3>Доступные комнаты</h3>
-                <br />
-                @foreach (Room chatRoom in ViewBag.chatRooms)
-                {
-                    <h3>@chatRoom.Name</h3>
-                }
+                @await Html.PartialAsync("GetRoomsForUser")
                 <br />
                 <br />
-                <h3>Список пользователей комнаты</h3>
-                <br />
-                @foreach (var user in ViewBag.roomUsers)
-                {
-                    <h4>@user.Name</h4>
-                }
+                @await Html.PartialAsync("GetUsers")
             </td>
             <td width="75%">
                 <div id="header"></div>
@@ -67,9 +57,19 @@
         .build();
 
     let userName = '';
+
     // получение сообщения от сервера
-    hubConnection.on('Send', function (message, userName) {
-        if (userName == "") {
+    hubConnection.on('RefreshUsers', function (roomId) {
+
+        if (roomId != @ViewBag.roomId) {
+            return;
+        }
+        document.getElementById("UsersList").innerHTML = "<div id=\"UsersList\"></div>";
+    });
+    // получение сообщения от сервера
+    hubConnection.on('Receive', function (message, userName, roomId) {
+
+        if (userName == "" || roomId != @ViewBag.roomId) {
             return;
         }
 
@@ -117,7 +117,9 @@
 
         //Обычное сообщение еще и в чатике на фронте отображаем
         if (!message.startsWith('//')) {
-            hubConnection.invoke("Send", message, userName);
+            hubConnection.invoke("Send", message, userName, "@ViewBag.roomId");
+        } else {
+            hubConnection.invoke("RefreshUsers", "@ViewBag.roomId");
         }
 
         //TODO Необычные сообщения тоже должны отображаться на фронте (ну там список комнат обновляется)
@@ -129,6 +131,11 @@
         var xhr = new XMLHttpRequest();
 
         xhr.open("post", "/message", true);
+        xhr.onload = function () {
+            if (xhr.status != 200) {
+                alert(xhr.responseText);
+            }
+        }.bind(this);
         xhr.send(data);
     });
 
