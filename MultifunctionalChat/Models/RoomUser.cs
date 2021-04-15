@@ -7,9 +7,14 @@ namespace MultifunctionalChat.Models
 {
     public class RoomUser
     {
+        public int Id { get; set; }
         public int RoomsId { get; set; }
         public Room Room { get; set; }
         public int UsersId { get; set; }
         public User User { get; set; }
+
+        public bool Banned { get; set; }
+        public DateTime? BanStart { get; set; }
+        public int? BanInterval { get; set; }
     }
 }

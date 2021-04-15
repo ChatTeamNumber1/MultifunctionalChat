@@ -97,7 +97,44 @@ namespace MultifunctionalChat.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RoomId");
+
+                    b.HasIndex("UserId");
+
                     b.ToTable("RoomMembers");
+                });
+
+                modelBuilder.Entity("MultifunctionalChat.Models.RoomUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<int>("UsersId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RoomsId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("BanInterval")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("BanStart")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("Banned")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UsersId", "RoomsId");
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoomsId");
+
+                    b.ToTable("RoomUsers");
                 });
 
             modelBuilder.Entity("MultifunctionalChat.Models.User", b =>
@@ -124,34 +161,52 @@ namespace MultifunctionalChat.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("RoomUsers", b =>
+            modelBuilder.Entity("MultifunctionalChat.Models.RoomMember", b =>
                 {
-                    b.Property<int>("RoomsId")
-                        .HasColumnType("integer");
+                    b.HasOne("MultifunctionalChat.Models.Room", "Room")
+                        .WithMany()
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<int>("UsersId")
-                        .HasColumnType("integer");
+                    b.HasOne("MultifunctionalChat.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasKey("RoomsId", "UsersId");
+                    b.Navigation("Room");
 
-                    b.HasIndex("UsersId");
-
-                    b.ToTable("RoomUser");
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RoomUsers", b =>
+            modelBuilder.Entity("MultifunctionalChat.Models.RoomUser", b =>
                 {
-                    b.HasOne("MultifunctionalChat.Models.Room", null)
-                        .WithMany()
+                    b.HasOne("MultifunctionalChat.Models.Room", "Room")
+                        .WithMany("RoomUsers")
                         .HasForeignKey("RoomsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MultifunctionalChat.Models.User", null)
-                        .WithMany()
+                    b.HasOne("MultifunctionalChat.Models.User", "User")
+                        .WithMany("RoomUsers")
                         .HasForeignKey("UsersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Room");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MultifunctionalChat.Models.Room", b =>
+                {
+                    b.Navigation("RoomUsers");
+                });
+
+            modelBuilder.Entity("MultifunctionalChat.Models.User", b =>
+                {
+                    b.Navigation("RoomUsers");
                 });
 #pragma warning restore 612, 618
         }

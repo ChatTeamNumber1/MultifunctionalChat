@@ -36,11 +36,11 @@ namespace MultifunctionalChat.Controllers
 
             return View();
         }
-        public ActionResult GetUsers()
+        public ActionResult GetUsers(string id)
         {
-            /*var currentRoom = _roomService.GetList().Where(room => room.Id.ToString() == id).FirstOrDefault();            
+            var currentRoom = _roomService.GetList().Where(room => room.Id.ToString() == id).FirstOrDefault();            
             var roomUsers = _userService.GetList().Where(user => user.Rooms.Contains(currentRoom)).ToList();
-            ViewBag.roomUsers = roomUsers;*/
+            ViewBag.roomUsers = roomUsers;
             
             return PartialView("GetUsers");
         }

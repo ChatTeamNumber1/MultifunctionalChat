@@ -2,11 +2,9 @@
 
 <h3>Доступные комнаты</h3>
 <br />
-<div id="RoomsList">
-    @foreach (Room chatRoom in ViewBag.chatRooms)
-    {
-        <a href="/Room/Index?Id=@chatRoom.Id">
-            <h3>@chatRoom.Name</h3>
-        </a>
-    }
-</div>
+@foreach (Room chatRoom in ViewBag.chatRooms)
+{
+    <a href="/Room/Index?Id=@chatRoom.Id">
+        <h3>@chatRoom.Name</h3>
+    </a>
+}

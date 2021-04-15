@@ -8,10 +8,14 @@
     <tbody>
         <tr>
             <td width="25%" style="vertical-align:top">
-                @await Html.PartialAsync("GetRoomsForUser")
+                <div id="RoomsList">
+                    @await Html.PartialAsync("GetRoomsForUser")
+                </div>
                 <br />
                 <br />
-                @await Html.PartialAsync("GetUsers")
+                <div id="UsersList">
+                    @await Html.PartialAsync("GetUsers")
+                </div>
             </td>
             <td width="75%">
                 <div id="header"></div>
@@ -70,8 +74,15 @@
         if (roomId != @ViewBag.roomId) {
             return;
         }
-        document.getElementById("UsersList").innerHTML = "<div id=\"UsersList\"></div>";
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("get", "/Room/GetUsers?Id=@ViewBag.roomId", true);
+        xhr.send();
+        xhr.onload = function () {
+            document.getElementById("UsersList").innerHTML = xhr.responseText;
+        };
     });
+
     // получение сообщения от сервера
     hubConnection.on('Receive', function (message, userName, roomId) {
 
@@ -108,9 +119,6 @@
     // отправка сообщения на сервер
     document.getElementById("sendBtn").addEventListener("click", function (e) {
 
-        let now = new Date();
-        console.log("click");
-        console.log(now);
         if (userName == "") {
             return;
         }
@@ -147,16 +155,8 @@
                     hubConnection.invoke("RefreshUsers", "@ViewBag.roomId");
                 }
             }
-
-            now = new Date();
-            console.log("receive");
-            console.log(now);
         };
         xhr.send(data);
-
-        now = new Date();
-        console.log("send");
-        console.log(now);
     });
 
     hubConnection.start();

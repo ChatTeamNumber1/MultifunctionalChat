@@ -60,7 +60,7 @@ namespace MultifunctionalChat.Services
 
         public void Delete(int id)
         {
-            /*var RoomUserToDelete = RoomUsersList.Where(x => x.Id == id).FirstOrDefault();
+            var RoomUserToDelete = RoomUsersList.Where(x => x.Id == id).FirstOrDefault();
             using var transaction = context.Database.BeginTransaction();
 
             try
@@ -72,7 +72,7 @@ namespace MultifunctionalChat.Services
             catch (Exception)
             {
                 transaction.Rollback();
-            }*/
+            }
         }
 
         private bool disposed = false;

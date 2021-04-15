@@ -149,6 +149,24 @@ namespace MultifunctionalChat.Controllers
                         roomUserService.Create(new RoomUser { RoomsId = roomToConnect.Id, Room = roomToConnect, User = userToConnect, UsersId = userToConnect.Id });
                         result = $"Обновлены данные о комнате с id = {roomToConnect.Id}";
                     }
+                    else if (messageParts.Length > 1 && messageParts[1] == "disconnect")
+                    {
+                        //Тут через || идут названия двух комнат.
+                        string trimmedMessage = message.Text.Replace("//room", "").Replace("disconnect", "").Trim();
+                        if (trimmedMessage == "")
+                        {
+                            var roomToConnect = roomService.GetList().Where(
+                                room => room.Id == message.RoomId).FirstOrDefault();
+                            var userTryingToRunCommand = userService.Get(message.UserId);
+                            RoomUser roomUser = roomUserService.GetList().Where(ru => ru.RoomsId == message.RoomId && ru.UsersId == message.UserId).FirstOrDefault();
+                            
+                            userTryingToRunCommand.RoomUsers.Remove(roomUser);
+                            userService.Update(userTryingToRunCommand);
+                            //RoomUser roomUser = roomUserService.GetList().Where(ru => ru.RoomsId == message.RoomId && ru.UsersId == message.UserId).FirstOrDefault();
+                            //roomUserService.Delete(roomUser.Id);
+                            result = $"Удалено";
+                        }
+                    }
                 }
                 else
                 {
