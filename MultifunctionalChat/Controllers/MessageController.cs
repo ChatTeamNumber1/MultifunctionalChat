@@ -51,6 +51,14 @@ namespace MultifunctionalChat.Controllers
             //Обычные сообщения
             if (!message.Text.StartsWith("//"))
             {
+                var userTryingToPost = userService.Get(message.UserId);
+                var currentRoom = roomService.Get(message.RoomId);
+                if (!currentRoom.Users.Contains(userTryingToPost) || userTryingToPost.RoleId.ToString() == StaticVars.ROLE_BANNED)
+                {
+                    result = "Вы не можете писать сообщения в этой комнате";
+                    logger.LogInformation(result);
+                    return NotFound(result);
+                }
                 messageService.Create(message);
                 result = $"Сообщение с id = {message.Id} добавлено в общий список";
             }
@@ -109,7 +117,7 @@ namespace MultifunctionalChat.Controllers
                         {
                             result = "Неверный формат сообщения (не найден флаг -l)";
                             logger.LogInformation(result);
-                            return Ok(result);
+                            return NotFound(result);
                         }
 
                         var roomToConnect = roomService.GetList().Where(
@@ -122,27 +130,22 @@ namespace MultifunctionalChat.Controllers
                         {
                             result = $"Неверное название комнаты";
                             logger.LogInformation(result);
-                            return Ok(result);
+                            return NotFound(result);
                         }
                         else if (userToConnect == null)
                         {
                             result = $"Неверное имя пользователя";
                             logger.LogInformation(result);
-                            return Ok(result);
+                            return NotFound(result);
                         }
                         else if (message.UserId != roomToConnect.OwnerId &&
                             userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_ADMIN)
                         {
-                            result = $"Недостаточно прав для добавления в комнату с id = {roomToConnect.Id}";
+                            result = $"Недостаточно прав для добавления в комнату {roomToConnect.Name}";
                             logger.LogInformation(result);
-                            return Ok(result);
+                            return NotFound(result);
                         }
 
-
-
-                        //roomToConnect.RoomUsers.Add(new RoomUser { Room = roomToConnect, User = userToConnect });
-                        //roomToConnect.Users.Add(userToConnect);
-                        //roomService.Update(roomToConnect);
                         roomUserService.Create(new RoomUser { RoomsId = roomToConnect.Id, Room = roomToConnect, User = userToConnect, UsersId = userToConnect.Id });
                         result = $"Обновлены данные о комнате с id = {roomToConnect.Id}";
                     }

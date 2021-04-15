@@ -31,11 +31,8 @@ namespace MultifunctionalChat.Controllers
             var currentUser = users.Where(us => us.Login == User.Identity.Name).FirstOrDefault();
             ViewBag.currentUser = currentUser;
 
-            var chatRooms = _roomService.GetList().Where(room => room.Users.Contains(currentUser)).ToList();
-            ViewBag.chatRooms = chatRooms;
-
-            var roomUsers = _userService.GetList().Where(user => user.Rooms.Contains(currentRoom)).ToList();
-            ViewBag.roomUsers = roomUsers;
+            ViewBag.chatRooms = currentUser.Rooms;
+            ViewBag.roomUsers = currentRoom.Users;
 
             return View();
         }

@@ -19,5 +19,13 @@ namespace MultifunctionalChat
         /// Модератор
         /// </summary>
         public const string ROLE_MODERATOR = "2";
+        /// <summary>
+        /// Пользователь
+        /// </summary>
+        public const string ROLE_USER = "3";
+        /// <summary>
+        /// Забаненный
+        /// </summary>
+        public const string ROLE_BANNED = "4";
     }
 }

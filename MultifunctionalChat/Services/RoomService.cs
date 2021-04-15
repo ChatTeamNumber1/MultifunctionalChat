@@ -17,8 +17,14 @@ namespace MultifunctionalChat.Services
 
             foreach (var room in _roomsList)
             {
-                room.Users = context.Users.Where(rm => rm.Rooms.Contains(room)).ToList();
-                room.RoomUsers = context.RoomUsers.Where(rm => rm.Room == room).ToList();
+                if (room.Users == null)
+                {
+                    room.Users = context.Users.Where(rm => rm.Rooms.Contains(room)).ToList();
+                }
+                if (room.RoomUsers == null)
+                {
+                    room.RoomUsers = context.RoomUsers.Where(rm => rm.Room == room).ToList();
+                }
             }
         }
 

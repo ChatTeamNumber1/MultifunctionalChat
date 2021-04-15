@@ -5,6 +5,8 @@
 <div id="RoomsList">
     @foreach (Room chatRoom in ViewBag.chatRooms)
     {
-        <h3>@chatRoom.Name</h3>
+        <a href="/Room/Index?Id=@chatRoom.Id">
+            <h3>@chatRoom.Name</h3>
+        </a>
     }
 </div>

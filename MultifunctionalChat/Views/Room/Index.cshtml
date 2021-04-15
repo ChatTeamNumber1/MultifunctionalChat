@@ -115,12 +115,7 @@
             return;
         }
 
-        //Обычное сообщение еще и в чатике на фронте отображаем
-        if (!message.startsWith('//')) {
-            hubConnection.invoke("Send", message, userName, "@ViewBag.roomId");
-        } else {
-            hubConnection.invoke("RefreshUsers", "@ViewBag.roomId");
-        }
+
 
         //TODO Необычные сообщения тоже должны отображаться на фронте (ну там список комнат обновляется)
         const data = new FormData();
@@ -134,6 +129,13 @@
         xhr.onload = function () {
             if (xhr.status != 200) {
                 alert(xhr.responseText);
+            } else {
+                //Обычное сообщение еще и в чатике на фронте отображаем
+                if (!message.startsWith('//')) {
+                    hubConnection.invoke("Send", message, userName, "@ViewBag.roomId");
+                } else {
+                    hubConnection.invoke("RefreshUsers", "@ViewBag.roomId");
+                }
             }
         }.bind(this);
         xhr.send(data);

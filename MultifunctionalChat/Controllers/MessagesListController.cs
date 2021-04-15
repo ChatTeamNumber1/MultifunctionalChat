@@ -12,17 +12,18 @@ namespace MultifunctionalChat.Controllers
     {
         private readonly IRepository<Message> messageService;
         private readonly ILogger<MessageController> logger;
+        private readonly List<Message> messagesList;
 
         public MessagesListController(IRepository<Message> messageService, ILogger<MessageController> logger)
         {
             this.messageService = messageService;
             this.logger = logger;
+            messagesList = messageService.GetList();
         }
 
         [HttpGet]
         public ActionResult<List<Message>> Get()
         {
-            var messagesList = messageService.GetList();
             logger.LogInformation("Выведен полный список сообщений");
             return messagesList;
         }
@@ -30,9 +31,9 @@ namespace MultifunctionalChat.Controllers
         [HttpGet("{id}")]
         public ActionResult<List<Message>> Get(int id)
         {
-            var messagesList = messageService.GetList().Where(mess =>mess.RoomId == id).ToList();
+            var msgList = messagesList.Where(mess =>mess.RoomId == id).ToList();
             logger.LogInformation($"Выведены сообщения из комнаты с id = {id}");
-            return messagesList;
+            return msgList;
         }
     }
 }
