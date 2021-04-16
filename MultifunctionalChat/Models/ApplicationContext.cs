@@ -48,6 +48,8 @@ namespace MultifunctionalChat.Models
                 {
                     j.HasKey(t => new { t.UsersId, t.RoomsId });
                     j.ToTable("RoomUsers");
+                    j.HasKey(t => new { t.Id });
+                    j.ToTable("RoomUsers");
                 }
             );
         }

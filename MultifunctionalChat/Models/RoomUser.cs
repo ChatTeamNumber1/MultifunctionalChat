@@ -13,7 +13,7 @@ namespace MultifunctionalChat.Models
         public int UsersId { get; set; }
         public User User { get; set; }
 
-        public bool Banned { get; set; }
+        public char? Status { get; set; }
         public DateTime? BanStart { get; set; }
         public int? BanInterval { get; set; }
     }

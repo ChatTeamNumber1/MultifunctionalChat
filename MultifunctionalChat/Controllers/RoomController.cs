@@ -46,6 +46,9 @@ namespace MultifunctionalChat.Controllers
         }
         public ActionResult GetRoomsForUser()
         {
+            var currentUser = _userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+            ViewBag.chatRooms = currentUser.Rooms;
+
             return PartialView("GetRoomsForUser");
         }
 

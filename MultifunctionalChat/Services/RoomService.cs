@@ -60,14 +60,11 @@ namespace MultifunctionalChat.Services
 
             try
             {
-                ///FIXME - аналогично с UserService
                 using var newContext = new ApplicationContext();
                 newContext.Entry(updatedRoom).State = EntityState.Modified;
                 newContext.SaveChanges();
 
                 transaction.Commit();
-                //int roomIndex = _roomsList.IndexOf(Get(updatedRoom.Id));
-                //_roomsList[roomIndex] = updatedRoom;
             }
             catch (Exception)
             {

@@ -14,7 +14,7 @@ namespace MultifunctionalChat.Migrations
                     Id = table.Column<int>(type: "serial", nullable: false),
                     RoomsId = table.Column<int>(type: "integer", nullable: false),
                     UsersId = table.Column<int>(type: "integer", nullable: false),
-                    Banned = table.Column<bool>(type: "boolean", nullable: false),
+                    Status = table.Column<char>(type: "char", nullable: true),
                     BanStart = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     BanInterval = table.Column<int>(type: "integer", nullable: true)
                 },
@@ -68,17 +68,17 @@ namespace MultifunctionalChat.Migrations
 
             migrationBuilder.InsertData(
                 table: "RoomUsers",
-                columns: new[] { "Id", "UsersId", "RoomsId", "Banned" },
+                columns: new[] { "Id", "UsersId", "RoomsId" },
                 values: new object[,]
                 {
-                    { 1, 1, 1, false },
-                    { 2, 2, 1, false },
-                    { 3, 3, 1, false },
-                    { 4, 1, 2, false },
-                    { 5, 2, 2, false },
-                    { 6, 3, 2, false },
-                    { 7, 1, 3, false },
-                    { 8, 3, 3, false }
+                    { 1, 1, 1 },
+                    { 2, 2, 1 },
+                    { 3, 3, 1 },
+                    { 4, 1, 2 },
+                    { 5, 2, 2 },
+                    { 6, 3, 2 },
+                    { 7, 1, 3 },
+                    { 8, 3, 3 }
                 });
         }
 

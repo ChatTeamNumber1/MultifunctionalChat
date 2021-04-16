@@ -81,6 +81,13 @@
         xhr.onload = function () {
             document.getElementById("UsersList").innerHTML = xhr.responseText;
         };
+
+        var xhr2 = new XMLHttpRequest();
+        xhr2.open("get", "/Room/GetRoomsForUser", true);
+        xhr2.send();
+        xhr2.onload = function () {
+            document.getElementById("RoomsList").innerHTML = xhr2.responseText;
+        };
     });
 
     // получение сообщения от сервера
