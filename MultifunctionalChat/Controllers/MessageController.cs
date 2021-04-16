@@ -15,14 +15,14 @@ namespace MultifunctionalChat.Controllers
         private readonly IRepository<Room> roomService;
         private readonly IRepository<RoomUser> roomUserService;
         private readonly IRepository<User> userService;
-        private readonly ILogger<MessageController> logger;
 
+        private readonly ILogger<MessageController> logger;
         public MessageController(IRepository<Message> messageService, IRepository<Room> roomService,
             IRepository<User> userService, IRepository<RoomUser> roomUserService, ILogger<MessageController> logger)
         {
             this.messageService = messageService;
-            this.roomService = roomService;
             this.roomUserService = roomUserService;
+            this.roomService = roomService;
             this.userService = userService;
             this.logger = logger;
         }
@@ -62,9 +62,38 @@ namespace MultifunctionalChat.Controllers
                 messageService.Create(message);
                 result = $"Сообщение с id = {message.Id} добавлено в общий список";
             }
+
             //Команды
             else
             {
+                if (message.Text.StartsWith("//room") & message.Text.StartsWith("//room create"))
+                {
+                    int indexOfOpeningLetter = message.Text.IndexOf("{")+1;
+                    int indexOfClosingBracket = message.Text.IndexOf("}");
+                    int length = indexOfClosingBracket - indexOfOpeningLetter;
+
+                    string newRoomName = message.Text.Substring(indexOfOpeningLetter, length);
+                    if(newRoomName == "")
+                    {
+                        result = "Неверный формат сообщения (отсутствует название комнаты)";
+                        logger.LogError(result);
+                        return BadRequest(result);
+                    }
+                    string[] messageElements = message.Text.Replace($"{{{newRoomName}}}", "").Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    var currentUser = userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault() ??
+                        throw new Exception("Не найден пользователь");
+                    Room newRoom = new Room();
+                    newRoom.Name = newRoomName;
+                    newRoom.OwnerId = currentUser.Id;
+                    newRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = currentUser.Id, RoomsId = newRoom.Id } };
+                    newRoom.IsPublic = !(messageElements.Contains("-c") || messageElements.Contains("-b"));
+                    
+                    roomService.Create(newRoom);
+
+                    result = $"Создана комната с id = {newRoom.Id}";
+                }
+
+
                 string[] messageParts = message.Text.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (messageParts[0] == "//room")
