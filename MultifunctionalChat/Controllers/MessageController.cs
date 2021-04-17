@@ -55,7 +55,8 @@ namespace MultifunctionalChat.Controllers
                     messageService.Create(message);
                     result = $"Сообщение с id = {message.Id} добавлено в общий список";
                 }
-                result = $"Пользователь с id = {message.UserId} забанен и не может писать сообщения";
+                else
+                    result = $"Пользователь с id = {message.UserId} забанен и не может писать сообщения";
             }
             //Команды
             else
@@ -236,6 +237,43 @@ namespace MultifunctionalChat.Controllers
                         else
                         {
                             result = $"Недостаточно прав для бана пользователя с id = {userToBan.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                    }
+                    if (messageParts.Length > 1 && messageParts[1] == "pardon")
+                    {
+                        string messageUnban = message.Text.Replace("//user", "").Replace("pardon", "").Trim();
+
+                        var userToUnban = userService.GetList().Where(
+                            user => user.Login == messageUnban.Trim()).FirstOrDefault();
+
+                        var userRoleId = userService.GetList().Where(
+                            user => message.UserId == user.Id).FirstOrDefault().RoleId;
+
+                        if (userToUnban == null)
+                        {
+                            result = $"Неверный логин пользователя";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        if (userRoleId == 1 || userRoleId == 2)
+                        {
+                            if (userToUnban.RoleId != 4)
+                            {
+                                result = $"Не забанен пользователь с id = {userToUnban.Id}";
+                                logger.LogInformation(result);
+                                return Ok(result);
+                            }
+                            userToUnban.RoleId = 3;
+                            userService.Update(userToUnban);
+                            result = $"Разбанен пользователь с id = {userToUnban.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        else
+                        {
+                            result = $"Недостаточно прав для разбана пользователя с id = {userToUnban.Id}";
                             logger.LogInformation(result);
                             return Ok(result);
                         }
