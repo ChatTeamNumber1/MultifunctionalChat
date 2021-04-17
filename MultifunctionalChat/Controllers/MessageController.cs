@@ -66,20 +66,26 @@ namespace MultifunctionalChat.Controllers
             //Команды
             else
             {
-                int indexOfOpeningLetter = message.Text.IndexOf("{")+1;
-                int indexOfClosingBracket = message.Text.IndexOf("}");
-                int length = indexOfClosingBracket - indexOfOpeningLetter;
-                string roomName = message.Text.Substring(indexOfOpeningLetter, length);
-                if (roomName == "")
-                {
-                    result = "Неверный формат сообщения (отсутствует название комнаты)";
-                    logger.LogError(result);
-                    return BadRequest(result);
-                }
-
                 if (message.Text.StartsWith("//room") & message.Text.StartsWith("//room create"))
-                {
-                    string[] messageElements = message.Text.Replace($"{{{roomName}}}", "").Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                { 
+                    string messageTrimmed = message.Text.Trim().Replace("//room create", "");
+                    string roomName = messageTrimmed;
+                    string flag = null;
+
+                    if (messageTrimmed.Contains("-b") | messageTrimmed.Contains("-c"))
+                    {
+                        int length = messageTrimmed.Length - 3;
+                        roomName = messageTrimmed.Substring(0, length);
+                        flag = messageTrimmed.Substring(messageTrimmed.LastIndexOf(" -"));
+                    }
+
+                    if (roomName == "")
+                    {
+                        result = "Неверный формат сообщения (отсутствует название комнаты)";
+                        logger.LogError(result);
+                        return BadRequest(result);
+                    }
+
                     var currentUser = userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
                     if (currentUser == null)
                     {
@@ -92,14 +98,16 @@ namespace MultifunctionalChat.Controllers
                     newRoom.Name = roomName;
                     newRoom.OwnerId = currentUser.Id;
                     newRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = currentUser.Id, RoomsId = newRoom.Id } };
-                    newRoom.IsPublic = !(messageElements.Contains("-c") || messageElements.Contains("-b"));
-                    
+                    newRoom.IsPublic = (flag == null);
+
                     roomService.Create(newRoom);
 
                     result = $"Создана комната с id = {newRoom.Id}";
                 }
+
                 else if(message.Text.StartsWith("//room") & message.Text.StartsWith("//room delete"))
                 {
+                    string roomName = "notAssigned"; //удалить
                     Room roomToDelete = roomService.GetList().Find(room => room.Name == roomName);
                     if (roomToDelete == null)
                     {
