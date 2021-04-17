@@ -2,7 +2,13 @@
 
 <h3>Список пользователей комнаты</h3>
 <br />
-@foreach (var user in ViewBag.roomUsers)
+@foreach (var roomUser in ViewBag.roomUsers)
 {
-    <h4>@user.Name</h4>
+    <h4>
+        @roomUser.User.Name
+        @if (roomUser.Status != null)
+        {
+        <span>&nbsp;(@roomUser.Status)</span>
+        }
+    </h4>
 }

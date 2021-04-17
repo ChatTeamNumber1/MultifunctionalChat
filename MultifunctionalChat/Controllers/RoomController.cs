@@ -10,18 +10,21 @@ namespace MultifunctionalChat.Controllers
     public class RoomController : Controller
     {
         private readonly IRepository<Room> _roomService;
+        private readonly IRepository<RoomUser> _roomUserService;
         private readonly IRepository<User> _userService;
         private readonly ILogger<MessageController> _logger;
 
-        public RoomController (IRepository<Room> roomService, IRepository<User> userService, ILogger<MessageController> logger)
+        public RoomController (IRepository<Room> roomService, IRepository<RoomUser> roomUserService, IRepository<User> userService, ILogger<MessageController> logger)
         {
             _logger = logger;
             _roomService = roomService;
+            _roomUserService = roomUserService;
             _userService = userService;
         }
         public IActionResult Index(string id)
         {
-            ViewBag.roomId = id;
+            ViewBag.roomId = id; 
+            
             var currentRoom = _roomService.GetList().Where(room => room.Id.ToString() == id).FirstOrDefault();
             ViewBag.room = currentRoom;
 
@@ -32,16 +35,14 @@ namespace MultifunctionalChat.Controllers
             ViewBag.currentUser = currentUser;
 
             ViewBag.chatRooms = currentUser.Rooms;
-            ViewBag.roomUsers = currentRoom.Users;
+            var roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id); ;
+            ViewBag.roomUsers = roomUsers;
 
             return View();
         }
         public ActionResult GetUsers(string id)
         {
-            var currentRoom = _roomService.GetList().Where(room => room.Id.ToString() == id).FirstOrDefault();            
-            var roomUsers = _userService.GetList().Where(user => user.Rooms.Contains(currentRoom)).ToList();
-            ViewBag.roomUsers = roomUsers;
-            
+            ViewBag.roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id);
             return PartialView("GetUsers");
         }
         public ActionResult GetRoomsForUser()
