@@ -38,7 +38,7 @@
                 <div id="chatroom" data-roomId="@ViewBag.roomId" style="width:100%; height: 400px; overflow-y:scroll"></div>
 
                 <br />
-
+                
                 <div id="inputForm" style="width:100%">
                     <h3>Новое сообщение</h3>
                     <textarea style="width:100%" id="message"></textarea>
@@ -140,9 +140,6 @@
             return;
         }
 
-
-
-        //TODO Необычные сообщения тоже должны отображаться на фронте (ну там список комнат обновляется)
         const data = new FormData();
         data.append("text", message);
         data.append("userId", @ViewBag.currentUser.Id);

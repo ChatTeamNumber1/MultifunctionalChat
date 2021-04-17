@@ -35,8 +35,12 @@ namespace MultifunctionalChat.Controllers
             ViewBag.currentUser = currentUser;
 
             ViewBag.chatRooms = currentUser.Rooms;
-            var roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id); ;
+            var roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id);
             ViewBag.roomUsers = roomUsers;
+
+            //Если попали в какую-то комнату, где вас быть не должно...
+            if (roomUsers.Where(ru => ru.User == currentUser).ToList().Count == 0)
+                return GetRoomsForUser();
 
             return View();
         }

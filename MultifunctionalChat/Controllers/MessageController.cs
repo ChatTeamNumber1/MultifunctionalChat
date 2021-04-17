@@ -25,6 +25,18 @@ namespace MultifunctionalChat.Controllers
             this.roomUserService = roomUserService;
             this.userService = userService;
             this.logger = logger;
+
+            foreach (RoomUser roomUser in roomUserService.GetList())
+            {
+                if (roomUser.Status != null && roomUser.BanStart != null && roomUser.BanInterval != null &&
+                    roomUser.BanStart < DateTime.Now.AddMinutes(-(double)roomUser.BanInterval))
+                {
+                    roomUser.Status = null;
+                    roomUser.BanInterval = null;
+                    roomUser.BanStart = null;
+                    roomUserService.Update(roomUser);
+                }
+            }
         }
 
         [HttpGet]
@@ -52,8 +64,13 @@ namespace MultifunctionalChat.Controllers
             if (!message.Text.StartsWith("//"))
             {
                 var userTryingToPost = userService.Get(message.UserId);
-                var currentRoom = roomService.Get(message.RoomId);
-                if (!currentRoom.Users.Contains(userTryingToPost) || userTryingToPost.RoleId.ToString() == StaticVars.ROLE_BANNED)
+                var currentRoom = roomService.Get(message.RoomId); 
+                var roomUser = roomUserService.GetList().Where(
+                    ru => ru.RoomsId == message.RoomId && ru.User.Id == message.UserId).FirstOrDefault();
+
+                if (!currentRoom.Users.Contains(userTryingToPost) && roomUser.User.RoleId.ToString() == StaticVars.ROLE_USER || 
+                    userTryingToPost.RoleId.ToString() == StaticVars.ROLE_BANNED ||
+                    roomUser.Status != null && roomUser.User.RoleId.ToString() == StaticVars.ROLE_USER)
                 {
                     result = "Вы не можете писать сообщения в этой комнате";
                     logger.LogInformation(result);
@@ -338,8 +355,8 @@ namespace MultifunctionalChat.Controllers
 
             //Muted
             roomUser.Status = 'M';
-            roomUser.BanInterval = null;
-            roomUser.BanStart = null;
+            roomUser.BanInterval = 10;
+            roomUser.BanStart = DateTime.Now;
 
             if (mutePos > 0)
             {
@@ -360,94 +377,55 @@ namespace MultifunctionalChat.Controllers
             logger.LogInformation(result);
             return Ok(result);
         }
+
         public ActionResult<Message> RoomSpeak(Message message)
         {
             string result = "";
             string trimmedMessage = message.Text.Replace("//room", "").Replace("speak", "").Trim();
 
-            //Чисто дисконнект
-            if (trimmedMessage == "")
+            string[] connectedParts = trimmedMessage.Split(new string[] { "-l " }, StringSplitOptions.RemoveEmptyEntries);
+            int loginPos = trimmedMessage.IndexOf("-l ");
+
+            if (loginPos < 0)
             {
-                RoomUser roomUser = roomUserService.GetList().Where(ru => ru.RoomsId == message.RoomId && ru.UsersId == message.UserId).FirstOrDefault();
-                roomUserService.Delete(roomUser.Id);
-                result = $"Вы вышли из комнаты {roomUser.Room.Name}";
+                result = "Неверный формат сообщения (не найден флаг -l)";
+                logger.LogInformation(result);
+                return NotFound(result);
             }
-            else
+            if (connectedParts.Length > 1)
             {
-                string[] connectedParts = trimmedMessage.Split(new string[] { " -l ", " -m " }, StringSplitOptions.RemoveEmptyEntries);
-
-                int loginPos = trimmedMessage.IndexOf(" -l ");
-                int mutePos = trimmedMessage.IndexOf(" -m ");
-
-                //Отсоединяемый пользователь
-                RoomUser roomUser = roomUserService.GetList().Where(
-                    ru => ru.Room.Name == connectedParts[0] && ru.UsersId == message.UserId).FirstOrDefault();
-                if (roomUser == null)
-                {
-                    result = $"Неверное название комнаты";
-                    logger.LogInformation(result);
-                    return NotFound(result);
-                }
-
-                //Дисконнект с комнатой
-                if (connectedParts.Length < 2)
-                {
-                    roomUserService.Delete(roomUser.Id);
-                    result = $"Вы вышли из комнаты {roomUser.Room.Name}";
-                }
-                //Дисконнект другого юзера
-                else
-                {
-                    var userTryingToRunCommand = userService.Get(message.UserId);
-
-                    if (message.UserId != roomUser.Room.OwnerId &&
-                        userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_ADMIN &&
-                        userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_MODERATOR)
-                    {
-                        result = $"Недостаточно прав для удаления людей из комнаты {connectedParts[0]}";
-                        logger.LogInformation(result);
-                        return NotFound(result);
-                    }
-
-                    if (loginPos > 0 && (mutePos == -1 || mutePos > loginPos))
-                    {
-                        roomUser = roomUserService.GetList().Where(
-                            ru => ru.Room.Name == connectedParts[0] && ru.User.Name == connectedParts[1]).FirstOrDefault();
-                        if (roomUser == null)
-                        {
-                            result = $"Неверное имя пользователя";
-                            logger.LogInformation(result);
-                            return NotFound(result);
-                        }
-                    }
-                    if (mutePos > 0)
-                    {
-                        //Banned
-                        roomUser.Status = 'B';
-                        string muteTimeStr = connectedParts[1];
-                        if (loginPos > 0 && loginPos < mutePos)
-                        {
-                            muteTimeStr = connectedParts[2];
-                        }
-
-                        int muteTime = 0;
-                        if (!Int32.TryParse(muteTimeStr, out muteTime))
-                        {
-                            result = $"Время блокировки - не число";
-                            logger.LogInformation(result);
-                            return NotFound(result);
-                        }
-                        roomUser.BanInterval = muteTime;
-                        roomUser.BanStart = DateTime.Now;
-
-                        roomUserService.Update(roomUser);
-                        result = $"Пользователь {roomUser.User.Name} отключен";
-                    }
-                }
+                result = "Неверный формат сообщения (текст перед флагом -l)";
+                logger.LogInformation(result);
+                return NotFound(result);
             }
+            RoomUser roomUser = roomUserService.GetList().Where(
+                ru => ru.RoomsId == message.RoomId && ru.User.Name == connectedParts[0].Trim()).FirstOrDefault();
+            var userTryingToRunCommand = userService.Get(message.UserId);
+
+            if (roomUser == null)
+            {
+                result = $"Неверное имя пользователя";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+            if (message.UserId != roomUser.Room.OwnerId &&
+                userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_ADMIN &&
+                userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_MODERATOR)
+            {
+                result = $"Недостаточно прав для разблокировки людей из комнаты {roomUser.Room.Name}";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            roomUser.Status = null;
+            roomUser.BanInterval = null;
+            roomUser.BanStart = null;
+            roomUserService.Update(roomUser);
+            result = $"Пользователь {roomUser.User.Name} снова может говорить";
             logger.LogInformation(result);
             return Ok(result);
         }
+
         #endregion
     }
 }
