@@ -135,6 +135,68 @@ namespace MultifunctionalChat.Controllers
                             return Ok(result);
                         }                       
                     }
+                    if (messageParts.Length > 1 && messageParts[1] == "moderator")
+                    {
+                        string trimmedMessage = message.Text.Replace("//user", "").Replace("moderator", "").Trim();
+                        string[] actionModerator = trimmedMessage.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (actionModerator.Length < 2)
+                        {
+                            result = "Неверный формат сообщения (не найдено действие)";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+
+                        var userToModerator = userService.GetList().Where(
+                            user => user.Login == actionModerator[0].Trim()).FirstOrDefault();
+
+                        var userRoleId = userService.GetList().Where(
+                            user => message.UserId == user.Id).FirstOrDefault();
+
+                        if (userToModerator == null)
+                        {
+                            result = $"Неверный логин пользователя";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        else if (userRoleId.RoleId != 1)
+                        {
+                            result = $"Недостаточно прав для назначения модератора";
+                            logger.LogInformation(result);
+                            return Ok(result);
+
+                        }
+                        else if (actionModerator[1].Trim() == "n")
+                        {
+                            if (userToModerator.RoleId == 2)
+                            {
+                                result = $"Уже является модератором пользователь с id = {userToModerator.Id}";
+                                logger.LogInformation(result);
+                                return Ok(result);
+                            }
+                            userToModerator.RoleId = 2;
+                            userService.Update(userToModerator);
+                            result = $"Назначен модератором пользователь с id = {userToModerator.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+
+                        }
+                        else if (actionModerator[1].Trim() == "d")
+                        {
+                            if (userToModerator.RoleId == 3)
+                            {
+                                result = $"Не является модератором пользователь с id = {userToModerator.Id}";
+                                logger.LogInformation(result);
+                                return Ok(result);
+                            }
+                            userToModerator.RoleId = 3;
+                            userService.Update(userToModerator);
+                            result = $"Разжалован из модераторов пользователь с id = {userToModerator.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+
+                        }
+                    }
                 }
                 else
                 {
