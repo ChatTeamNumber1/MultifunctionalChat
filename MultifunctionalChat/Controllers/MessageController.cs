@@ -66,24 +66,30 @@ namespace MultifunctionalChat.Controllers
             //Команды
             else
             {
+                int indexOfOpeningLetter = message.Text.IndexOf("{")+1;
+                int indexOfClosingBracket = message.Text.IndexOf("}");
+                int length = indexOfClosingBracket - indexOfOpeningLetter;
+                string roomName = message.Text.Substring(indexOfOpeningLetter, length);
+                if (roomName == "")
+                {
+                    result = "Неверный формат сообщения (отсутствует название комнаты)";
+                    logger.LogError(result);
+                    return BadRequest(result);
+                }
+
                 if (message.Text.StartsWith("//room") & message.Text.StartsWith("//room create"))
                 {
-                    int indexOfOpeningLetter = message.Text.IndexOf("{")+1;
-                    int indexOfClosingBracket = message.Text.IndexOf("}");
-                    int length = indexOfClosingBracket - indexOfOpeningLetter;
-
-                    string newRoomName = message.Text.Substring(indexOfOpeningLetter, length);
-                    if(newRoomName == "")
+                    string[] messageElements = message.Text.Replace($"{{{roomName}}}", "").Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    var currentUser = userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+                    if (currentUser == null)
                     {
-                        result = "Неверный формат сообщения (отсутствует название комнаты)";
+                        result = "Пользователь не найден, авторизация не пройдена"; //handle Exception
                         logger.LogError(result);
-                        return BadRequest(result);
+                        return Unauthorized(result);
                     }
-                    string[] messageElements = message.Text.Replace($"{{{newRoomName}}}", "").Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    var currentUser = userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault() ??
-                        throw new Exception("Не найден пользователь");
+
                     Room newRoom = new Room();
-                    newRoom.Name = newRoomName;
+                    newRoom.Name = roomName;
                     newRoom.OwnerId = currentUser.Id;
                     newRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = currentUser.Id, RoomsId = newRoom.Id } };
                     newRoom.IsPublic = !(messageElements.Contains("-c") || messageElements.Contains("-b"));
@@ -92,7 +98,28 @@ namespace MultifunctionalChat.Controllers
 
                     result = $"Создана комната с id = {newRoom.Id}";
                 }
+                else if(message.Text.StartsWith("//room") & message.Text.StartsWith("//room delete"))
+                {
+                    Room roomToDelete = roomService.GetList().Find(room => room.Name == roomName);
+                    if (roomToDelete == null)
+                    {
+                        result = "Комната не найдена";
+                        logger.LogError(result);
+                        return NotFound(result);
+                    }
 
+                    var userTryingToDelete = userService.Get(message.UserId);
+                    if (message.UserId != roomToDelete.OwnerId && userTryingToDelete.RoleId.ToString() != StaticVars.ROLE_ADMIN)
+                    {
+                        result = $"Недостаточно прав для удаления комнаты {roomToDelete.Name}";
+                        logger.LogInformation(result);
+                        return Forbid(result);
+                    }
+
+                    roomService.Delete(roomToDelete.Id);
+
+                    result = $"Удалена комната с id = {roomToDelete.Id}";
+                }
 
                 string[] messageParts = message.Text.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
