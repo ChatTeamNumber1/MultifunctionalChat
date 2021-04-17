@@ -48,8 +48,14 @@ namespace MultifunctionalChat.Controllers
             //Обычные сообщения
             if (!message.Text.StartsWith("//"))
             {
-                messageService.Create(message);
-                result = $"Сообщение с id = {message.Id} добавлено в общий список";
+                var userRoleId = userService.GetList().Where(
+                            user => message.UserId == user.Id).FirstOrDefault().RoleId;
+                if (userRoleId != 4)
+                {
+                    messageService.Create(message);
+                    result = $"Сообщение с id = {message.Id} добавлено в общий список";
+                }
+                result = $"Пользователь с id = {message.UserId} забанен и не может писать сообщения";
             }
             //Команды
             else
@@ -195,6 +201,43 @@ namespace MultifunctionalChat.Controllers
                             logger.LogInformation(result);
                             return Ok(result);
 
+                        }
+                    }
+                    if (messageParts.Length > 1 && messageParts[1] == "ban")
+                    {
+                        string messageBan = message.Text.Replace("//user", "").Replace("ban", "").Trim();
+
+                        var userToBan = userService.GetList().Where(
+                            user => user.Login == messageBan.Trim()).FirstOrDefault();
+
+                        var userRoleId = userService.GetList().Where(
+                            user => message.UserId == user.Id).FirstOrDefault().RoleId;
+
+                        if (userToBan == null)
+                        {
+                            result = $"Неверный логин пользователя";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        if (userRoleId == 1 || userRoleId == 2)
+                        {
+                            if (userToBan.RoleId == 4)
+                            {
+                                result = $"Уже забанен пользователь с id = {userToBan.Id}";
+                                logger.LogInformation(result);
+                                return Ok(result);
+                            }
+                            userToBan.RoleId = 4;
+                            userService.Update(userToBan);
+                            result = $"Забанен пользователь с id = {userToBan.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        else
+                        {
+                            result = $"Недостаточно прав для бана пользователя с id = {userToBan.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
                         }
                     }
                 }
