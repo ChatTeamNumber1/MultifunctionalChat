@@ -117,10 +117,10 @@ namespace MultifunctionalChat.Controllers
                         }
 
                         var userToRename = userService.GetList().Where(
-                            user => user.Name == renamedParts[0].Trim()).FirstOrDefault();
+                            user => user.Login == renamedParts[0].Trim()).FirstOrDefault();
 
                         var userRoleId = userService.GetList().Where(
-                            user => message.UserId == user.Id).FirstOrDefault();
+                            user => message.UserId == user.Id).FirstOrDefault().RoleId;
 
                         if (userToRename == null)
                         {
@@ -128,7 +128,7 @@ namespace MultifunctionalChat.Controllers
                             logger.LogInformation(result);
                             return Ok(result);
                         }
-                        if (userRoleId.RoleId == 1 || userRoleId.RoleId == 5)
+                        if (userRoleId == 1 || userRoleId == 5)
                         {
                             string newUserName = renamedParts[1].Trim();
                             userToRename.Name = newUserName;
@@ -158,7 +158,7 @@ namespace MultifunctionalChat.Controllers
                             user => user.Login == actionModerator[0].Trim()).FirstOrDefault();
 
                         var userRoleId = userService.GetList().Where(
-                            user => message.UserId == user.Id).FirstOrDefault();
+                            user => message.UserId == user.Id).FirstOrDefault().RoleId;
 
                         if (userToModerator == null)
                         {
@@ -166,7 +166,7 @@ namespace MultifunctionalChat.Controllers
                             logger.LogInformation(result);
                             return Ok(result);
                         }
-                        else if (userRoleId.RoleId != 1)
+                        else if (userRoleId != 1)
                         {
                             result = $"Недостаточно прав для назначения модератора";
                             logger.LogInformation(result);
@@ -190,7 +190,7 @@ namespace MultifunctionalChat.Controllers
                         }
                         else if (actionModerator[1].Trim() == "d")
                         {
-                            if (userToModerator.RoleId == 3)
+                            if (userToModerator.RoleId != 2)
                             {
                                 result = $"Не является модератором пользователь с id = {userToModerator.Id}";
                                 logger.LogInformation(result);
