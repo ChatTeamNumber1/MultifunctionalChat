@@ -17,19 +17,18 @@ namespace MultifunctionalChat.Services
 
             foreach (var room in _roomsList)
             {
-                List<RoomMember> membersList = context.RoomMembers.Where(member => member.RoomId == room.Id).ToList();
-                List<User> usersList = new List<User>();
-
-                foreach (var member in membersList)
+                if (room.Users == null)
                 {
-                    usersList.Add(context.Users.Where(us => us.Id == member.UserId).FirstOrDefault());
+                    room.Users = context.Users.Where(rm => rm.Rooms.Contains(room)).ToList();
                 }
-                usersList = usersList.Distinct().ToList();
-                room.MembersList = usersList;
+                if (room.RoomUsers == null)
+                {
+                    room.RoomUsers = context.RoomUsers.Where(rm => rm.Room == room).ToList();
+                }
             }
         }
 
-         public List<Room> GetList()
+        public List<Room> GetList()
         {
             return _roomsList;
         }       
@@ -61,14 +60,11 @@ namespace MultifunctionalChat.Services
 
             try
             {
-                ///FIXME - аналогично с UserService
                 using var newContext = new ApplicationContext();
                 newContext.Entry(updatedRoom).State = EntityState.Modified;
                 newContext.SaveChanges();
 
                 transaction.Commit();
-                int roomIndex = _roomsList.IndexOf(Get(updatedRoom.Id));
-                _roomsList[roomIndex] = updatedRoom;
             }
             catch (Exception)
             {

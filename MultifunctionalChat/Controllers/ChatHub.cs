@@ -10,9 +10,13 @@ namespace SignalRApp
     [Authorize]
     public class ChatHub : Hub
     {
-        public async Task Send(string message, string userName)
+        public async Task Send(string message, string userName, string roomId)
         {
-            await Clients.All.SendAsync("Send", message, userName);
+            await Clients.All.SendAsync("Receive", message, userName, roomId);
+        }
+        public async Task RefreshUsers(string roomId)
+        {
+            await Clients.All.SendAsync("RefreshUsers", roomId);
         }
     }
 }

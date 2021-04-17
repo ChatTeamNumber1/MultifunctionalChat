@@ -1,53 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using Microsoft.EntityFrameworkCore;
 using MultifunctionalChat.Models;
 
 namespace MultifunctionalChat.Services
 {
-    public class MessageService : IRepository<Message>
+    public class RoomUserService : IRepository<RoomUser>
     {
-        private readonly List<Message> messagesList;
+        private readonly List<RoomUser> RoomUsersList;
         private readonly ApplicationContext context;
 
-        public MessageService(ApplicationContext context)
+        public RoomUserService(ApplicationContext context)
         {
             this.context = context;
-            messagesList = context.Messages.ToList();
-            var UsersList = context.Users.ToList();
-            var RolesList = context.Roles.ToList();
-
-            foreach (var message in messagesList)
-            {
-                User user = UsersList.Where(user => user.Id == message.UserId).FirstOrDefault();
-                if (user.UserRole == null)
-                {
-                    Role role = RolesList.Where(role => role.Id == user.RoleId).FirstOrDefault();
-                    user.UserRole = role;
-                }
-
-                message.Author = user;
-            }
+            RoomUsersList = context.RoomUsers.ToList();
         }
-
-        public List<Message> GetList()
+        public List<RoomUser> GetList()
         {
-            return messagesList;
+            return RoomUsersList;
         }
-        public Message Get(int id)
+        public RoomUser Get(int id)
         {
-            return messagesList.Where(x => x.Id == id).FirstOrDefault();
+            return null;
         }
-        public void Create(Message newMessage)
+        public void Create(RoomUser newRoomUser)
         {
             using var transaction = context.Database.BeginTransaction();
 
             try
             {
-                newMessage.MessageDate = DateTime.Now;
-                context.Messages.Add(newMessage);
+                context.RoomUsers.Add(newRoomUser);
                 context.SaveChanges();
                 transaction.Commit();
             }
@@ -57,19 +40,17 @@ namespace MultifunctionalChat.Services
             }
         }
 
-        public void Update(Message updatedMessage)
+        public void Update(RoomUser updatedRoomUser)
         {
             using var transaction = context.Database.BeginTransaction();
             try
             {
                 ///FIXME Так удалось обойти проблему открытого соединения в прошлом проекте
                 using var newContext = new ApplicationContext();
-                newContext.Entry(updatedMessage).State = EntityState.Modified;
+                newContext.Entry(updatedRoomUser).State = EntityState.Modified;
                 newContext.SaveChanges();
 
                 transaction.Commit();
-                int messageIndex = messagesList.IndexOf(Get(updatedMessage.Id));
-                messagesList[messageIndex] = updatedMessage;
             }
             catch (Exception)
             {
@@ -79,12 +60,12 @@ namespace MultifunctionalChat.Services
 
         public void Delete(int id)
         {
-            var messageToDelete = messagesList.Where(x => x.Id == id).FirstOrDefault();
+            var RoomUserToDelete = RoomUsersList.Where(x => x.Id == id).FirstOrDefault();
             using var transaction = context.Database.BeginTransaction();
 
             try
             {
-                context.Messages.Remove(messageToDelete);
+                context.RoomUsers.Remove(RoomUserToDelete);
                 context.SaveChanges();
                 transaction.Commit();
             }

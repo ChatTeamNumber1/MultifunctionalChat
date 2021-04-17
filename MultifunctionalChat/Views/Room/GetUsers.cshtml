@@ -1,0 +1,19 @@
+﻿@using MultifunctionalChat.Models;
+
+<h3>Список пользователей комнаты</h3>
+<br />
+@foreach (var roomUser in ViewBag.roomUsers)
+{
+<h4>
+    @roomUser.User.Name
+    
+    @if (roomUser.Status == 'B')
+    {
+        <span style="color:red" title="Пользователь не может писать сообщения">&nbsp;(Заблокирован)</span>
+    }
+    @if (roomUser.Status == 'M')
+    {
+        <span style="color:red" title="Пользователь не может писать сообщения">&nbsp;(Молчит)</span>
+    }
+</h4>
+}

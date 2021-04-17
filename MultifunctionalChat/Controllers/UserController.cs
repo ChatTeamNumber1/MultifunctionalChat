@@ -6,8 +6,7 @@ using MultifunctionalChat.Services;
 
 namespace MultifunctionalChat.Controllers
 {
-    [Route("[controller]")]
-    public class UserController : ControllerBase
+    public class UserController : Controller
     {
         private readonly IRepository<User> usersService;
         private readonly ILogger<UserController> logger;

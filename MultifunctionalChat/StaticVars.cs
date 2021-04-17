@@ -10,14 +10,22 @@ namespace MultifunctionalChat
         /// <summary>
         /// Самая общая комната
         /// </summary>
-        public static string DEFAULT_ROOM_ID = "3";
+        public const string DEFAULT_ROOM_ID = "3";
         /// <summary>
         /// Администратор
         /// </summary>
-        public static string ROLE_ADMIN = "1";
+        public const string ROLE_ADMIN = "1";
         /// <summary>
         /// Модератор
         /// </summary>
-        public static string ROLE_MODERATOR = "2";
+        public const string ROLE_MODERATOR = "2";
+        /// <summary>
+        /// Пользователь
+        /// </summary>
+        public const string ROLE_USER = "3";
+        /// <summary>
+        /// Забаненный
+        /// </summary>
+        public const string ROLE_BANNED = "4";
     }
 }

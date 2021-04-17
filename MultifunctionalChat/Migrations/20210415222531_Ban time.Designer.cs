@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MultifunctionalChat.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -9,9 +10,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MultifunctionalChat.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20210415222531_Ban time")]
+    partial class Bantime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,13 +106,8 @@ namespace MultifunctionalChat.Migrations
                     b.ToTable("RoomMembers");
                 });
 
-                modelBuilder.Entity("MultifunctionalChat.Models.RoomUser", b =>
+            modelBuilder.Entity("MultifunctionalChat.Models.RoomUser", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
                     b.Property<int>("UsersId")
                         .HasColumnType("integer");
 
@@ -130,7 +127,6 @@ namespace MultifunctionalChat.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("UsersId", "RoomsId");
-                    b.HasKey("Id");
 
                     b.HasIndex("RoomsId");
 
