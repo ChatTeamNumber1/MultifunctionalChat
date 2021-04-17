@@ -140,6 +140,183 @@ namespace MultifunctionalChat.Controllers
                         return RoomSpeak(message);
                     }
                 }
+                if (messageParts[0] == "//user")
+                {
+                    if (messageParts.Length > 1 && messageParts[1] == "rename")
+                    {
+                        string trimmedMessage = message.Text.Replace("//user", "").Replace("rename", "").Trim();
+                        string[] renamedParts = trimmedMessage.Split(new string[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (renamedParts.Length < 2)
+                        {
+                            result = "Неверный формат сообщения (не найдены ||)";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+
+                        var userToRename = userService.GetList().Where(
+                            user => user.Login == renamedParts[0].Trim()).FirstOrDefault();
+
+                        var userRoleId = userService.GetList().Where(
+                            user => message.UserId == user.Id).FirstOrDefault().RoleId;
+
+                        if (userToRename == null)
+                        {
+                            result = $"Неверное имя пользователя";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        if (userRoleId == 1 || userRoleId == 5)
+                        {
+                            string newUserName = renamedParts[1].Trim();
+                            userToRename.Name = newUserName;
+                            userService.Update(userToRename);
+                            result = $"Обновлены данные о пользователе с id = {userToRename.Id}";
+                        }
+                        else
+                        {
+                            result = $"Недостаточно прав для переименования пользователя с id = {userToRename.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }                       
+                    }
+                    if (messageParts.Length > 1 && messageParts[1] == "moderator")
+                    {
+                        string trimmedMessage = message.Text.Replace("//user", "").Replace("moderator", "").Trim();
+                        string[] actionModerator = trimmedMessage.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (actionModerator.Length < 2)
+                        {
+                            result = "Неверный формат сообщения (не найдено действие)";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+
+                        var userToModerator = userService.GetList().Where(
+                            user => user.Login == actionModerator[0].Trim()).FirstOrDefault();
+
+                        var userRoleId = userService.GetList().Where(
+                            user => message.UserId == user.Id).FirstOrDefault().RoleId;
+
+                        if (userToModerator == null)
+                        {
+                            result = $"Неверный логин пользователя";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        else if (userRoleId != 1)
+                        {
+                            result = $"Недостаточно прав для назначения модератора";
+                            logger.LogInformation(result);
+                            return Ok(result);
+
+                        }
+                        else if (actionModerator[1].Trim() == "n")
+                        {
+                            if (userToModerator.RoleId == 2)
+                            {
+                                result = $"Уже является модератором пользователь с id = {userToModerator.Id}";
+                                logger.LogInformation(result);
+                                return Ok(result);
+                            }
+                            userToModerator.RoleId = 2;
+                            userService.Update(userToModerator);
+                            result = $"Назначен модератором пользователь с id = {userToModerator.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+
+                        }
+                        else if (actionModerator[1].Trim() == "d")
+                        {
+                            if (userToModerator.RoleId != 2)
+                            {
+                                result = $"Не является модератором пользователь с id = {userToModerator.Id}";
+                                logger.LogInformation(result);
+                                return Ok(result);
+                            }
+                            userToModerator.RoleId = 3;
+                            userService.Update(userToModerator);
+                            result = $"Разжалован из модераторов пользователь с id = {userToModerator.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+
+                        }
+                    }
+                    if (messageParts.Length > 1 && messageParts[1] == "ban")
+                    {
+                        string messageBan = message.Text.Replace("//user", "").Replace("ban", "").Trim();
+
+                        var userToBan = userService.GetList().Where(
+                            user => user.Login == messageBan.Trim()).FirstOrDefault();
+
+                        var userRoleId = userService.GetList().Where(
+                            user => message.UserId == user.Id).FirstOrDefault().RoleId;
+
+                        if (userToBan == null)
+                        {
+                            result = $"Неверный логин пользователя";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        if (userRoleId == 1 || userRoleId == 2)
+                        {
+                            if (userToBan.RoleId == 4)
+                            {
+                                result = $"Уже забанен пользователь с id = {userToBan.Id}";
+                                logger.LogInformation(result);
+                                return Ok(result);
+                            }
+                            userToBan.RoleId = 4;
+                            userService.Update(userToBan);
+                            result = $"Забанен пользователь с id = {userToBan.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        else
+                        {
+                            result = $"Недостаточно прав для бана пользователя с id = {userToBan.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                    }
+                    if (messageParts.Length > 1 && messageParts[1] == "pardon")
+                    {
+                        string messageUnban = message.Text.Replace("//user", "").Replace("pardon", "").Trim();
+
+                        var userToUnban = userService.GetList().Where(
+                            user => user.Login == messageUnban.Trim()).FirstOrDefault();
+
+                        var userRoleId = userService.GetList().Where(
+                            user => message.UserId == user.Id).FirstOrDefault().RoleId;
+
+                        if (userToUnban == null)
+                        {
+                            result = $"Неверный логин пользователя";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        if (userRoleId == 1 || userRoleId == 2)
+                        {
+                            if (userToUnban.RoleId != 4)
+                            {
+                                result = $"Не забанен пользователь с id = {userToUnban.Id}";
+                                logger.LogInformation(result);
+                                return Ok(result);
+                            }
+                            userToUnban.RoleId = 3;
+                            userService.Update(userToUnban);
+                            result = $"Разбанен пользователь с id = {userToUnban.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        else
+                        {
+                            result = $"Недостаточно прав для разбана пользователя с id = {userToUnban.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                    }
+                }
                 else
                 {
                     result = $"Сделано что-то другое";
