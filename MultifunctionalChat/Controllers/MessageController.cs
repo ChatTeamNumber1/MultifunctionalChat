@@ -13,12 +13,14 @@ namespace MultifunctionalChat.Controllers
     {
         private readonly IRepository<Message> messageService;
         private readonly IRepository<Room> roomService;
+        private readonly IRepository<User> userService;
         private readonly ILogger<MessageController> logger;
 
-        public MessageController(IRepository<Message> messageService, IRepository<Room> roomService, ILogger<MessageController> logger)
+        public MessageController(IRepository<Message> messageService, IRepository<Room> roomService, IRepository<User> userService, ILogger<MessageController> logger)
         {
             this.messageService = messageService;
             this.roomService = roomService;
+            this.userService = userService;
             this.logger = logger;
         }
 
@@ -91,6 +93,47 @@ namespace MultifunctionalChat.Controllers
                         roomToRename.Name = newRoomName;
                         roomService.Update(roomToRename);
                         result = $"Обновлены данные о комнате с id = {roomToRename.Id}";                        
+                    }
+                }
+                if (messageParts[0] == "//user")
+                {
+                    if (messageParts.Length > 1 && messageParts[1] == "rename")
+                    {
+                        string trimmedMessage = message.Text.Replace("//user", "").Replace("rename", "").Trim();
+                        string[] renamedParts = trimmedMessage.Split(new string[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (renamedParts.Length < 2)
+                        {
+                            result = "Неверный формат сообщения (не найдены ||)";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+
+                        var userToRename = userService.GetList().Where(
+                            user => user.Name == renamedParts[0].Trim()).FirstOrDefault();
+
+                        var userRoleId = userService.GetList().Where(
+                            user => message.UserId == user.Id).FirstOrDefault();
+
+                        if (userToRename == null)
+                        {
+                            result = $"Неверное имя пользователя";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }
+                        if (userRoleId.RoleId == 1 || userRoleId.RoleId == 5)
+                        {
+                            string newUserName = renamedParts[1].Trim();
+                            userToRename.Name = newUserName;
+                            userService.Update(userToRename);
+                            result = $"Обновлены данные о пользователе с id = {userToRename.Id}";
+                        }
+                        else
+                        {
+                            result = $"Недостаточно прав для переименования пользователя с id = {userToRename.Id}";
+                            logger.LogInformation(result);
+                            return Ok(result);
+                        }                       
                     }
                 }
                 else
