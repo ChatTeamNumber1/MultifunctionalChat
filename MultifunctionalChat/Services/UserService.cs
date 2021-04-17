@@ -18,8 +18,15 @@ namespace MultifunctionalChat.Services
 
             foreach (var user in usersList)
             {
-                Role role = context.Roles.Where(role => role.Id == user.RoleId).FirstOrDefault();
-                user.UserRole = role;
+                if (user.UserRole == null)
+                {
+                    Role role = context.Roles.Where(role => role.Id == user.RoleId).FirstOrDefault();
+                    user.UserRole = role;
+                }
+                if (user.Rooms == null)
+                {
+                    user.Rooms = context.Rooms.Where(rm => rm.Users.Contains(user)).ToList();
+                }
             }
         }
         public List<User> GetList()

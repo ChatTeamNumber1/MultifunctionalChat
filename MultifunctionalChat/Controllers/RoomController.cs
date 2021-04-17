@@ -10,18 +10,23 @@ namespace MultifunctionalChat.Controllers
     public class RoomController : Controller
     {
         private readonly IRepository<Room> _roomService;
+        private readonly IRepository<RoomUser> _roomUserService;
         private readonly IRepository<User> _userService;
         private readonly ILogger<MessageController> _logger;
 
-        public RoomController (IRepository<Room> roomService, IRepository<User> userService, ILogger<MessageController> logger)
+        public RoomController (IRepository<Room> roomService, IRepository<RoomUser> roomUserService, IRepository<User> userService, ILogger<MessageController> logger)
         {
             _logger = logger;
             _roomService = roomService;
+            _roomUserService = roomUserService;
             _userService = userService;
         }
         public IActionResult Index(string id)
         {
-            ViewBag.roomId = id;
+            ViewBag.roomId = id; 
+            
+            var currentRoom = _roomService.GetList().Where(room => room.Id.ToString() == id).FirstOrDefault();
+            ViewBag.room = currentRoom;
 
             var users = _userService.GetList();
             ViewBag.users = users;
@@ -29,10 +34,27 @@ namespace MultifunctionalChat.Controllers
             var currentUser = users.Where(us => us.Login == User.Identity.Name).FirstOrDefault();
             ViewBag.currentUser = currentUser;
 
-            var chatRooms = _roomService.GetList().Where(room => room.MembersList.Contains(currentUser)).ToList();
-            ViewBag.chatRooms = chatRooms;
+            ViewBag.chatRooms = currentUser.Rooms;
+            var roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id);
+            ViewBag.roomUsers = roomUsers;
+
+            //Если попали в какую-то комнату, где вас быть не должно...
+            if (roomUsers.Where(ru => ru.User == currentUser).ToList().Count == 0)
+                return GetRoomsForUser();
 
             return View();
+        }
+        public ActionResult GetUsers(string id)
+        {
+            ViewBag.roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id);
+            return PartialView("GetUsers");
+        }
+        public ActionResult GetRoomsForUser()
+        {
+            var currentUser = _userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+            ViewBag.chatRooms = currentUser.Rooms;
+
+            return PartialView("GetRoomsForUser");
         }
 
         [HttpGet]

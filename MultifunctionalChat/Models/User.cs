@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MultifunctionalChat.Models
 {
@@ -14,6 +15,8 @@ namespace MultifunctionalChat.Models
 
         [NotMapped]
         public Role UserRole { get; set; }
-        //ToDo Avatar (или аватар роли)
+        //Все комнаты
+        public List<Room> Rooms { get; set; }
+        public List<RoomUser> RoomUsers { get; set; }
     }
 }
