@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MultifunctionalChat.Models
@@ -15,7 +16,11 @@ namespace MultifunctionalChat.Models
 
         [NotMapped]
         public Role UserRole { get; set; }
-        //Все комнаты
+
+        public char? Status { get; set; }
+        public DateTime? BanStart { get; set; }
+        public int? BanInterval { get; set; }
+
         public List<Room> Rooms { get; set; }
         public List<RoomUser> RoomUsers { get; set; }
     }

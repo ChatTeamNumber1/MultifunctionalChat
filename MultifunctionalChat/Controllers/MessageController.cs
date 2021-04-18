@@ -61,7 +61,7 @@ namespace MultifunctionalChat.Controllers
             string result = "";
 
             //Обычные сообщения
-            if (!message.Text.StartsWith("//"))
+            if (!message.Text.Trim().StartsWith("//"))
             {
                 var userTryingToPost = userService.Get(message.UserId);
                 var currentRoom = roomService.Get(message.RoomId); 
@@ -82,118 +82,22 @@ namespace MultifunctionalChat.Controllers
 
             //Команды
             else
-            {
-                if (message.Text.StartsWith("//room create"))
-                {
-                    string messageTrimmed = message.Text.Replace("//room create", "").Trim();
-                    string roomName = messageTrimmed;
-                    string flag = null;
-                    int roomNameLength = messageTrimmed.Length - 3;
-                    bool flagExists = messageTrimmed.LastIndexOf(" -") == roomNameLength;
-
-                    if (flagExists)
-                    {
-                        roomName = messageTrimmed.Substring(0, roomNameLength);
-                        flag = messageTrimmed.Substring(messageTrimmed.LastIndexOf(" -"));
-                    }
-
-                    if (roomName == "")
-                    {
-                        result = "Неверный формат сообщения (отсутствует название комнаты)";
-                        logger.LogError(result);
-                        return BadRequest(result);
-                    }
-
-                    var currentUser = userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
-                    if (currentUser == null)
-                    {
-                        result = "Пользователь не найден, авторизация не пройдена";
-                        logger.LogError(result);
-                        return Unauthorized(result);
-                    }
-
-                    Room newRoom = new Room();
-                    newRoom.Name = roomName;
-                    newRoom.OwnerId = currentUser.Id;
-                    newRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = currentUser.Id, RoomsId = newRoom.Id } };
-                    newRoom.IsPublic = (flag == null);
-
-                    roomService.Create(newRoom);
-
-                    result = $"Создана комната с id = {newRoom.Id}";
-                }
-
-                else if(message.Text.StartsWith("//room delete"))
-                {
-                    string roomName = message.Text.Replace("//room delete", "").Trim();
-                    if (roomName == "")
-                    {
-                        result = "Неверный формат сообщения (отсутствует название комнаты)";
-                        logger.LogError(result);
-                        return BadRequest(result);
-                    }
-
-                    Room roomToDelete = roomService.GetList().Find(room => room.Name == roomName);
-                    if (roomToDelete == null)
-                    {
-                        result = "Комната не найдена";
-                        logger.LogError(result);
-                        return NotFound(result);
-                    }
-
-                    var userTryingToDelete = userService.Get(message.UserId);
-                    if (message.UserId != roomToDelete.OwnerId && userTryingToDelete.RoleId.ToString() != StaticVars.ROLE_ADMIN)
-                    {
-                        result = $"Недостаточно прав для удаления комнаты {roomToDelete.Name}";
-                        logger.LogInformation(result);
-                        return Forbid(result);
-                    }
-
-                    roomService.Delete(roomToDelete.Id);
-
-                    result = $"Удалена комната с id = {roomToDelete.Id}";
-                }
-
+            {                
                 string[] messageParts = message.Text.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (messageParts[0] == "//room")
                 {
-                    if (messageParts.Length > 1 && messageParts[1] == "rename")
+                    if (messageParts.Length > 1 && messageParts[1] == "create")
                     {
-                        //Тут через || идут названия двух комнат.
-                        string trimmedMessage = message.Text.Replace("//room", "").Replace("rename", "").Trim();
-                        string[] renamedParts = trimmedMessage.Split(new string[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
-
-                        //TODO Проверку ошибок бы всю в одно место, а то разбросало...
-                        if (renamedParts.Length < 2)
-                        {
-                            result = "Неверный формат сообщения (не найдены ||)";
-                            logger.LogInformation(result);
-                            return NotFound(result);
-                        }
-
-                        var roomToRename = roomService.GetList().Where(
-                            room => room.Name == renamedParts[0].Trim()).FirstOrDefault();
-                        var userTryingToRename = userService.Get(message.UserId);
-
-                        if (roomToRename == null)
-                        {
-                            result = $"Неверное название комнаты";
-                            logger.LogInformation(result);
-                            return NotFound(result);
-                        }
-                        else if (message.UserId != roomToRename.OwnerId && 
-                            userTryingToRename.RoleId.ToString() != StaticVars.ROLE_ADMIN)
-                        {
-                            result = $"Недостаточно прав для переименования комнаты {roomToRename.Name}";
-                            logger.LogInformation(result);
-                            return NotFound(result);
-                        }
-
-                        string newRoomName = renamedParts[1].Trim();
-                        roomToRename.Name = newRoomName;
-                        roomService.Update(roomToRename);
-                        result = $"Обновлены данные о комнате с id = {roomToRename.Id}";
+                        return RoomCreate(message);
+                    }                    
+                    else if (messageParts.Length > 1 && messageParts[1] == "remove")
+                    {
+                        return RoomRemove(message);
+                    }
+                    else if (messageParts.Length > 1 && messageParts[1] == "rename")
+                    {
+                        return RoomRename(message);
                     }
                     else if (messageParts.Length > 1 && messageParts[1] == "connect")
                     {
@@ -423,7 +327,139 @@ namespace MultifunctionalChat.Controllers
         }
 
         #region RoomCommands
-        
+
+        public ActionResult<Message> RoomCreate(Message message)
+        {
+            string result = "";
+            string trimmedMessage = message.Text.Replace("//room", "").Replace("create", "").Trim();
+
+            string roomName = trimmedMessage;
+            string flag = null;
+            int roomNameLength = trimmedMessage.Length - 3;
+            bool flagExists = trimmedMessage.LastIndexOf(" -") == roomNameLength;
+
+            if (flagExists)
+            {
+                roomName = trimmedMessage.Substring(0, roomNameLength);
+                flag = trimmedMessage.Substring(trimmedMessage.LastIndexOf(" -"));
+            }
+
+
+            var userTryingToRunCommand = userService.Get(message.UserId);
+
+            if (roomName == "")
+            {
+                result = "Неверный формат сообщения (отсутствует название комнаты)";
+                logger.LogError(result);
+                return BadRequest(result);
+            }
+            else if (userTryingToRunCommand == null)
+            {
+                result = $"Неверное имя пользователя";
+                logger.LogInformation(result);
+                return Unauthorized(result);
+            }
+            else if (userTryingToRunCommand.RoleId.ToString() == StaticVars.ROLE_BANNED)
+            {
+                result = $"Вы забанены. Недостаточно прав для создания комнат";
+                logger.LogInformation(result);
+                return Unauthorized(result);
+            }
+
+
+            Room newRoom = new Room();
+            newRoom.Name = roomName;
+            newRoom.OwnerId = message.UserId;
+            newRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = message.UserId, RoomsId = newRoom.Id } };
+            if (flag == " -b")
+                newRoom.Type = 'B';
+            if (flag == " -c")
+                newRoom.Type = 'C';
+
+            roomService.Create(newRoom);
+
+            result = $"Создана комната с id = {newRoom.Id}";
+            logger.LogInformation(result);
+            return Ok(result);
+        }
+
+        public ActionResult<Message> RoomRemove(Message message)
+        {
+            string result = "";
+            string trimmedMessage = message.Text.Replace("//room", "").Replace("remove", "").Trim();
+            string roomName = trimmedMessage;
+
+            if (roomName == "")
+            {
+                result = "Неверный формат сообщения (отсутствует название комнаты)";
+                logger.LogError(result);
+                return BadRequest(result);
+            }
+
+            Room roomToDelete = roomService.GetList().Find(room => room.Name == roomName);
+            if (roomToDelete == null)
+            {
+                result = "Комната не найдена";
+                logger.LogError(result);
+                return NotFound(result);
+            }
+
+            var userTryingToDelete = userService.Get(message.UserId);
+            if (message.UserId != roomToDelete.OwnerId &&
+                userTryingToDelete.RoleId.ToString() != StaticVars.ROLE_ADMIN)
+            {
+                result = $"Недостаточно прав для удаления комнаты {roomToDelete.Name}";
+                logger.LogInformation(result);
+                return Forbid(result);
+            }
+
+            roomService.Delete(roomToDelete.Id);
+
+            result = $"Удалена комната с id = {roomToDelete.Id}";
+            logger.LogInformation(result);
+            return Ok(result);
+        }
+
+        public ActionResult<Message> RoomRename(Message message)
+        {
+            string result = "";
+            string trimmedMessage = message.Text.Replace("//room", "").Replace("remove", "").Trim();
+            //Тут через || идут названия двух комнат.
+            string[] renamedParts = trimmedMessage.Split(new string[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (renamedParts.Length < 2)
+            {
+                result = "Неверный формат сообщения (не найдены ||)";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            var roomToRename = roomService.GetList().Where(
+                room => room.Name == renamedParts[0].Trim()).FirstOrDefault();
+            var userTryingToRename = userService.Get(message.UserId);
+
+            if (roomToRename == null)
+            {
+                result = $"Неверное название комнаты";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+            else if (message.UserId != roomToRename.OwnerId &&
+                userTryingToRename.RoleId.ToString() != StaticVars.ROLE_ADMIN)
+            {
+                result = $"Недостаточно прав для переименования комнаты {roomToRename.Name}";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            string newRoomName = renamedParts[1].Trim();
+            roomToRename.Name = newRoomName;
+            roomService.Update(roomToRename);
+            result = $"Обновлены данные о комнате с id = {roomToRename.Id}";
+            logger.LogInformation(result);
+            return Ok(result);
+        }
+
         public ActionResult<Message> RoomConnect(Message message)
         {
             string result = "";

@@ -13,8 +13,8 @@ namespace MultifunctionalChat.Models
         //Владелец комнаты
         [ForeignKey("User")]
         public int OwnerId { get; set; }
-        //Общая (больше 2 людей) или приватная или чат-бот
-        public bool IsPublic { get; set; }
+
+        public char? Type { get; set; }
 
         //Все пользователи
         public List<User> Users { get; set; }

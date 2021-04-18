@@ -39,7 +39,8 @@ namespace MultifunctionalChat.Controllers
             ViewBag.roomUsers = roomUsers;
 
             //Если попали в какую-то комнату, где вас быть не должно...
-            if (roomUsers.Where(ru => ru.User == currentUser).ToList().Count == 0)
+            if (roomUsers.Where(ru => ru.User == currentUser).ToList().Count == 0 && 
+                (currentUser.RoleId.ToString() == StaticVars.ROLE_USER || currentUser.RoleId.ToString() == StaticVars.ROLE_BANNED))
                 return GetRoomsForUser();
 
             return View();
