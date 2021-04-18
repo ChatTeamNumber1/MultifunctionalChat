@@ -66,16 +66,17 @@ namespace MultifunctionalChat.Controllers
             //Команды
             else
             {
-                if (message.Text.StartsWith("//room") & message.Text.StartsWith("//room create"))
-                { 
-                    string messageTrimmed = message.Text.Trim().Replace("//room create", "");
+                if (message.Text.StartsWith("//room create"))
+                {
+                    string messageTrimmed = message.Text.Replace("//room create", "").Trim();
                     string roomName = messageTrimmed;
                     string flag = null;
+                    int roomNameLength = messageTrimmed.Length - 3;
+                    bool flagExists = messageTrimmed.LastIndexOf(" -") == roomNameLength;
 
-                    if (messageTrimmed.Contains("-b") | messageTrimmed.Contains("-c"))
+                    if (flagExists)
                     {
-                        int length = messageTrimmed.Length - 3;
-                        roomName = messageTrimmed.Substring(0, length);
+                        roomName = messageTrimmed.Substring(0, roomNameLength);
                         flag = messageTrimmed.Substring(messageTrimmed.LastIndexOf(" -"));
                     }
 
@@ -89,7 +90,7 @@ namespace MultifunctionalChat.Controllers
                     var currentUser = userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
                     if (currentUser == null)
                     {
-                        result = "Пользователь не найден, авторизация не пройдена"; //handle Exception
+                        result = "Пользователь не найден, авторизация не пройдена";
                         logger.LogError(result);
                         return Unauthorized(result);
                     }
@@ -105,9 +106,16 @@ namespace MultifunctionalChat.Controllers
                     result = $"Создана комната с id = {newRoom.Id}";
                 }
 
-                else if(message.Text.StartsWith("//room") & message.Text.StartsWith("//room delete"))
+                else if(message.Text.StartsWith("//room delete"))
                 {
-                    string roomName = "notAssigned"; //удалить
+                    string roomName = message.Text.Replace("//room delete", "").Trim();
+                    if (roomName == "")
+                    {
+                        result = "Неверный формат сообщения (отсутствует название комнаты)";
+                        logger.LogError(result);
+                        return BadRequest(result);
+                    }
+
                     Room roomToDelete = roomService.GetList().Find(room => room.Name == roomName);
                     if (roomToDelete == null)
                     {
