@@ -17,7 +17,6 @@ namespace MultifunctionalChat.Models
         [NotMapped]
         public Role UserRole { get; set; }
 
-        public char? Status { get; set; }
         public DateTime? BanStart { get; set; }
         public int? BanInterval { get; set; }
 

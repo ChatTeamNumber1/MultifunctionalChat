@@ -34,8 +34,8 @@ namespace MultifunctionalChat.Controllers
             var currentUser = users.Where(us => us.Login == User.Identity.Name).FirstOrDefault();
             ViewBag.currentUser = currentUser;
 
-            ViewBag.chatRooms = currentUser.Rooms;
-            var roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id);
+            ViewBag.chatRooms = currentUser.Rooms.OrderBy(room => room.Name);
+            var roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id).OrderBy(ru => ru.User.Name);
             ViewBag.roomUsers = roomUsers;
 
             var Owner = users.Where(us => us.Id == currentRoom.OwnerId).FirstOrDefault();
@@ -50,13 +50,13 @@ namespace MultifunctionalChat.Controllers
         }
         public ActionResult GetUsers(string id)
         {
-            ViewBag.roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id);
+            ViewBag.roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id).OrderBy(ru => ru.User.Name);
             return PartialView("GetUsers");
         }
         public ActionResult GetRoomsForUser()
         {
             var currentUser = _userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
-            ViewBag.chatRooms = currentUser.Rooms;
+            ViewBag.chatRooms = currentUser.Rooms.OrderBy(room => room.Name);
 
             return PartialView("GetRoomsForUser");
         }

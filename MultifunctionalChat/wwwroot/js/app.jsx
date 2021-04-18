@@ -5,6 +5,18 @@
         this.state = { messages: [] };
     }
 
+    deleteMessage(id) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("delete", "/message/" + id, true);
+
+        xhr.onload = function () {
+            alert(xhr.responseText);
+            if (xhr.status === 200) {
+                this.loadData();
+            }
+        }.bind(this);
+        xhr.send();
+    }
     // загрузка данных
     loadData() {
         var xhr = new XMLHttpRequest();
@@ -48,7 +60,11 @@
                                     &nbsp;&nbsp;&nbsp;
                                     <img title={message.author.userRole.name} height="20" src={ message.author.userRole.imageAddress} />
                                 </td>
-                                <td width="50%" align="right">{this.getFormattedDate(message.messageDate)}</td>
+                                <td width="50%" align="right">
+                                    {this.getFormattedDate(message.messageDate)}
+
+                                    <img title="Удалить" height="20" src="../images/cancel.png" onClick={(id) => this.deleteMessage(message.id)} />                                        
+                                </td>
                             </tr>
                         </tbody>
                     </table>

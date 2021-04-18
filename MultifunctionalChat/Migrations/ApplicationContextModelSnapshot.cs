@@ -138,9 +138,6 @@ namespace MultifunctionalChat.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("integer");
 
-                    b.Property<char?>("Status")
-                        .HasColumnType("character(1)");
-
                     b.HasKey("Id");
 
                     b.ToTable("Users");

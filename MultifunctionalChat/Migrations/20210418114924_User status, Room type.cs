@@ -28,12 +28,6 @@ namespace MultifunctionalChat.Migrations
                 nullable: true);
 
             migrationBuilder.AddColumn<char>(
-                name: "Status",
-                table: "Users",
-                type: "character(1)",
-                nullable: true);
-
-            migrationBuilder.AddColumn<char>(
                 name: "Type",
                 table: "Rooms",
                 type: "character(1)",
@@ -57,10 +51,6 @@ namespace MultifunctionalChat.Migrations
 
             migrationBuilder.DropColumn(
                 name: "BanStart",
-                table: "Users");
-
-            migrationBuilder.DropColumn(
-                name: "Status",
                 table: "Users");
 
             migrationBuilder.DropColumn(
