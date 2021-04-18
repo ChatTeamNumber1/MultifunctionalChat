@@ -15,14 +15,14 @@ namespace MultifunctionalChat.Controllers
         private readonly IRepository<Room> roomService;
         private readonly IRepository<RoomUser> roomUserService;
         private readonly IRepository<User> userService;
-        private readonly ILogger<MessageController> logger;
 
+        private readonly ILogger<MessageController> logger;
         public MessageController(IRepository<Message> messageService, IRepository<Room> roomService,
             IRepository<User> userService, IRepository<RoomUser> roomUserService, ILogger<MessageController> logger)
         {
             this.messageService = messageService;
-            this.roomService = roomService;
             this.roomUserService = roomUserService;
+            this.roomService = roomService;
             this.userService = userService;
             this.logger = logger;
 
@@ -79,9 +79,81 @@ namespace MultifunctionalChat.Controllers
                 messageService.Create(message);
                 result = $"Сообщение с id = {message.Id} добавлено в общий список";
             }
+
             //Команды
             else
             {
+                if (message.Text.StartsWith("//room create"))
+                {
+                    string messageTrimmed = message.Text.Replace("//room create", "").Trim();
+                    string roomName = messageTrimmed;
+                    string flag = null;
+                    int roomNameLength = messageTrimmed.Length - 3;
+                    bool flagExists = messageTrimmed.LastIndexOf(" -") == roomNameLength;
+
+                    if (flagExists)
+                    {
+                        roomName = messageTrimmed.Substring(0, roomNameLength);
+                        flag = messageTrimmed.Substring(messageTrimmed.LastIndexOf(" -"));
+                    }
+
+                    if (roomName == "")
+                    {
+                        result = "Неверный формат сообщения (отсутствует название комнаты)";
+                        logger.LogError(result);
+                        return BadRequest(result);
+                    }
+
+                    var currentUser = userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+                    if (currentUser == null)
+                    {
+                        result = "Пользователь не найден, авторизация не пройдена";
+                        logger.LogError(result);
+                        return Unauthorized(result);
+                    }
+
+                    Room newRoom = new Room();
+                    newRoom.Name = roomName;
+                    newRoom.OwnerId = currentUser.Id;
+                    newRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = currentUser.Id, RoomsId = newRoom.Id } };
+                    newRoom.IsPublic = (flag == null);
+
+                    roomService.Create(newRoom);
+
+                    result = $"Создана комната с id = {newRoom.Id}";
+                }
+
+                else if(message.Text.StartsWith("//room delete"))
+                {
+                    string roomName = message.Text.Replace("//room delete", "").Trim();
+                    if (roomName == "")
+                    {
+                        result = "Неверный формат сообщения (отсутствует название комнаты)";
+                        logger.LogError(result);
+                        return BadRequest(result);
+                    }
+
+                    Room roomToDelete = roomService.GetList().Find(room => room.Name == roomName);
+                    if (roomToDelete == null)
+                    {
+                        result = "Комната не найдена";
+                        logger.LogError(result);
+                        return NotFound(result);
+                    }
+
+                    var userTryingToDelete = userService.Get(message.UserId);
+                    if (message.UserId != roomToDelete.OwnerId && userTryingToDelete.RoleId.ToString() != StaticVars.ROLE_ADMIN)
+                    {
+                        result = $"Недостаточно прав для удаления комнаты {roomToDelete.Name}";
+                        logger.LogInformation(result);
+                        return Forbid(result);
+                    }
+
+                    roomService.Delete(roomToDelete.Id);
+
+                    result = $"Удалена комната с id = {roomToDelete.Id}";
+                }
+
                 string[] messageParts = message.Text.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (messageParts[0] == "//room")
