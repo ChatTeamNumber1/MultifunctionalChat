@@ -80,9 +80,12 @@ namespace MultifunctionalChat.Controllers
                 var roomUser = roomUserService.GetList().Where(
                     ru => ru.RoomsId == message.RoomId && ru.User.Id == message.UserId).FirstOrDefault();
 
-                if (!currentRoom.Users.Contains(userTryingToPost) && roomUser.User.RoleId.ToString() == StaticVars.ROLE_USER || 
+                if (userTryingToPost.RoleId.ToString() != StaticVars.ROLE_ADMIN &&  
+                    userTryingToPost.RoleId.ToString() != StaticVars.ROLE_MODERATOR &&
+                    (roomUser == null ||
+                    !currentRoom.Users.Contains(userTryingToPost) && roomUser.User.RoleId.ToString() == StaticVars.ROLE_USER || 
                     userTryingToPost.RoleId.ToString() == StaticVars.ROLE_BANNED ||
-                    roomUser.Status != null && roomUser.User.RoleId.ToString() == StaticVars.ROLE_USER)
+                    roomUser.Status != null && roomUser.User.RoleId.ToString() == StaticVars.ROLE_USER))
                 {
                     result = "Вы не можете писать сообщения в этой комнате";
                     logger.LogInformation(result);
@@ -353,7 +356,7 @@ namespace MultifunctionalChat.Controllers
                 logger.LogInformation(result);
                 return NotFound(result);
             }
-            else if (actionModerator[1].Trim() == "n")
+            else if (actionModerator[1].Trim() == "-n")
             {
                 if (userToModerator.RoleId.ToString() == StaticVars.ROLE_MODERATOR)
                 {
@@ -366,7 +369,7 @@ namespace MultifunctionalChat.Controllers
                 userService.Update(userToModerator);
                 result = $"Назначен модератором пользователь с id = {userToModerator.Id}";
             }
-            else if (actionModerator[1].Trim() == "d")
+            else if (actionModerator[1].Trim() == "-d")
             {
                 if (userToModerator.RoleId.ToString() != StaticVars.ROLE_MODERATOR)
                 {
@@ -453,7 +456,7 @@ namespace MultifunctionalChat.Controllers
             {
                 result = "Неверный формат сообщения (отсутствует название комнаты)";
                 logger.LogError(result);
-                return BadRequest(result);
+                return NotFound(result);
             }
 
             Room roomToDelete = roomService.GetList().Find(room => room.Name == roomName);
@@ -470,7 +473,7 @@ namespace MultifunctionalChat.Controllers
             {
                 result = $"Недостаточно прав для удаления комнаты {roomToDelete.Name}";
                 logger.LogInformation(result);
-                return Forbid(result);
+                return NotFound(result);
             }
 
             roomService.Delete(roomToDelete.Id);
@@ -483,7 +486,7 @@ namespace MultifunctionalChat.Controllers
         public ActionResult<Message> RoomRename(Message message)
         {
             string result = "";
-            string trimmedMessage = message.Text.Replace("//room", "").Replace("remove", "").Trim();
+            string trimmedMessage = message.Text.Replace("//room", "").Replace("rename", "").Trim();
             //Тут через || идут названия двух комнат.
             string[] renamedParts = trimmedMessage.Split(new string[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
 

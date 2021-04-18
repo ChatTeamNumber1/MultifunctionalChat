@@ -23,8 +23,11 @@ namespace MultifunctionalChat.Controllers
         }
         public IActionResult Index(string id)
         {
-            ViewBag.roomId = id; 
-            
+            if (User.Identity.Name == null)
+                return NotFound();
+
+            ViewBag.roomId = id;
+
             var currentRoom = _roomService.GetList().Where(room => room.Id.ToString() == id).FirstOrDefault();
             ViewBag.room = currentRoom;
 
@@ -37,6 +40,10 @@ namespace MultifunctionalChat.Controllers
             ViewBag.chatRooms = currentUser.Rooms.OrderBy(room => room.Name);
             var roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id).OrderBy(ru => ru.User.Name);
             ViewBag.roomUsers = roomUsers;
+
+            //Если попали в какую-то комнату, которой нет
+            if (currentRoom == null)
+                return GetRoomsForUser();
 
             var Owner = users.Where(us => us.Id == currentRoom.OwnerId).FirstOrDefault();
             ViewBag.owner = Owner;
