@@ -38,6 +38,9 @@ namespace MultifunctionalChat.Controllers
             var roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id);
             ViewBag.roomUsers = roomUsers;
 
+            var Owner = users.Where(us => us.Id == currentRoom.OwnerId).FirstOrDefault();
+            ViewBag.owner = Owner;
+
             //Если попали в какую-то комнату, где вас быть не должно...
             if (roomUsers.Where(ru => ru.User == currentUser).ToList().Count == 0 && 
                 (currentUser.RoleId.ToString() == StaticVars.ROLE_USER || currentUser.RoleId.ToString() == StaticVars.ROLE_BANNED))

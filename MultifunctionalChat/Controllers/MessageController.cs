@@ -498,7 +498,19 @@ namespace MultifunctionalChat.Controllers
                 logger.LogInformation(result);
                 return NotFound(result);
             }
-            else if (roomUserService.GetList().Where(ru => ru.RoomsId == roomToConnect.Id && ru.UsersId == userToConnect.Id) != null)
+            else if (roomToConnect.Type != null && roomToConnect.Type == 'B')
+            {
+                result = $"Нельзя добавлять людей в комнату с ботом";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+            else if (roomToConnect.Type != null && roomToConnect.Type == 'C' && roomToConnect.RoomUsers.Count >= 2)
+            {
+                result = $"Нельзя добавлять людей в приватную комнату. Вас уже много";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+            else if (roomUserService.GetList().Where(ru => ru.RoomsId == roomToConnect.Id && ru.UsersId == userToConnect.Id).FirstOrDefault() != null)
             {
                 result = $"Пользователь и так состоит в комнате {roomToConnect.Name}";
                 logger.LogInformation(result);
