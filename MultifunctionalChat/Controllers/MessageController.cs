@@ -210,6 +210,15 @@ namespace MultifunctionalChat.Controllers
 
             var userToRename = userService.GetList().Where(
                 user => user.Name == renamedParts[0].Trim()).FirstOrDefault();
+            int userCount = userService.GetList().Where(
+                user => user.Name == renamedParts[0].Trim()).ToList().Count;
+            if (userCount > 1)
+            {
+                result = $"Вас много. Выберите id пользователя";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
             var userRoleId = userService.GetList().Where(
                 user => message.UserId == user.Id).FirstOrDefault().RoleId;
 
