@@ -17,6 +17,8 @@ namespace MultifunctionalChat.Controllers
         private readonly IRepository<User> userService;
 
         private readonly ILogger<MessageController> logger;
+
+        private readonly List<User> usersList;
         public MessageController(IRepository<Message> messageService, IRepository<Room> roomService,
             IRepository<User> userService, IRepository<RoomUser> roomUserService, ILogger<MessageController> logger)
         {
@@ -25,7 +27,7 @@ namespace MultifunctionalChat.Controllers
             this.roomService = roomService;
             this.userService = userService;
             this.logger = logger;
-
+                        
             //Проверяем, не пора ли разбанить людей
             foreach (RoomUser roomUser in roomUserService.GetList())
             {
@@ -49,6 +51,8 @@ namespace MultifunctionalChat.Controllers
                     userService.Update(user);
                 }
             }
+
+            usersList = userService.GetList();
         }
 
         [HttpGet]
@@ -193,6 +197,38 @@ namespace MultifunctionalChat.Controllers
             return Ok($"Удалено сообщение с id = {id}");
         }
 
+
+        private string GetErrorMessageForDoubleUserNames(string userName)
+        {
+            string result = "";
+            int userCount = usersList.Where(
+                user => user.Name == userName.Trim()).ToList().Count;
+            if (userCount > 1)
+            {
+                result = $"Пользователей с таким именем много." + Environment.NewLine +
+                    "Укажите рядом с именем id пользователя." + Environment.NewLine +
+                    "Например, //user rename Имя(id) || Новое_имя";
+            }
+            return result;
+        }
+
+        private User GetUserFromStringWithId(string text)
+        {
+            User user = usersList.Where(
+                user => user.Name == text.Trim()).FirstOrDefault();
+
+            if (user == null && text.Contains("("))
+            {
+                string[] userParts = text.Split(new char[] { '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (userParts.Length > 1)
+                user = usersList.Where(
+                    us => us.Id.ToString() == userParts[1].Trim()).FirstOrDefault();
+            }
+
+            return user;
+        }
+
         #region UserCommands
 
         public ActionResult<Message> UserRename(Message message)
@@ -208,26 +244,23 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            var userToRename = userService.GetList().Where(
-                user => user.Name == renamedParts[0].Trim()).FirstOrDefault();
-            int userCount = userService.GetList().Where(
-                user => user.Name == renamedParts[0].Trim()).ToList().Count;
-            if (userCount > 1)
+            result = GetErrorMessageForDoubleUserNames(renamedParts[0]);
+            if (result != "")
             {
-                result = $"Вас много. Выберите id пользователя";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
 
-            var userRoleId = userService.GetList().Where(
-                user => message.UserId == user.Id).FirstOrDefault().RoleId;
-
+            var userToRename = GetUserFromStringWithId(renamedParts[0]);
             if (userToRename == null)
             {
                 result = $"Неверное имя пользователя";
                 logger.LogInformation(result);
                 return Unauthorized(result);
             }
+
+            var userRoleId = usersList.Where(
+                user => message.UserId == user.Id).FirstOrDefault().RoleId;
             if (userRoleId.ToString() != StaticVars.ROLE_ADMIN)
             {
                 result = $"Недостаточно прав для переименования пользователя {userToRename.Name}";
@@ -247,20 +280,25 @@ namespace MultifunctionalChat.Controllers
         {
             string result = "";
             string messageBan = message.Text.Replace("//user", "").Replace("ban", "").Trim();
-
             string[] connectedParts = messageBan.Split(new string[] { " -m " }, StringSplitOptions.RemoveEmptyEntries);
 
-            var userToBan = userService.GetList().Where(
-                user => user.Name == connectedParts[0].Trim()).FirstOrDefault();
-            var userRoleId = userService.GetList().Where(
-                user => message.UserId == user.Id).FirstOrDefault().RoleId;
+            result = GetErrorMessageForDoubleUserNames(connectedParts[0]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
 
+            var userToBan = GetUserFromStringWithId(connectedParts[0]);
             if (userToBan == null)
             {
                 result = $"Неверный логин пользователя";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
+
+            var userRoleId = usersList.Where(
+                user => message.UserId == user.Id).FirstOrDefault().RoleId;
             if (userRoleId.ToString() != StaticVars.ROLE_ADMIN && userRoleId.ToString() != StaticVars.ROLE_MODERATOR)
             {
                 result = $"Недостаточно прав для бана пользователя с id = {userToBan.Id}";
@@ -402,7 +440,7 @@ namespace MultifunctionalChat.Controllers
 
         public ActionResult<Message> RoomCreate(Message message)
         {
-            string result = "";
+            string result;
             string trimmedMessage = message.Text.Replace("//room", "").Replace("create", "").Trim();
 
             string roomName = trimmedMessage;
@@ -439,9 +477,7 @@ namespace MultifunctionalChat.Controllers
             }
 
 
-            Room newRoom = new Room();
-            newRoom.Name = roomName;
-            newRoom.OwnerId = message.UserId;
+            Room newRoom = new Room { Name = roomName, OwnerId = message.UserId };
             newRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = message.UserId, RoomsId = newRoom.Id } };
             if (flag == " -b")
                 newRoom.Type = 'B';
