@@ -10,13 +10,11 @@ namespace MultifunctionalChat.Controllers
     [Route("[controller]")]
     public class MessagesListController : ControllerBase
     {
-        private readonly IRepository<Message> messageService;
         private readonly ILogger<MessageController> logger;
         private readonly List<Message> messagesList;
 
         public MessagesListController(IRepository<Message> messageService, ILogger<MessageController> logger)
         {
-            this.messageService = messageService;
             this.logger = logger;
             messagesList = messageService.GetList();
         }

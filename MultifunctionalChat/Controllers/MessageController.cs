@@ -151,7 +151,7 @@ namespace MultifunctionalChat.Controllers
                     }
                     if (messageParts.Length > 1 && messageParts[1] == "pardon")
                     {
-                        UserPardon(message);
+                        return UserPardon(message);
                     }
                 }
                 else
@@ -337,13 +337,16 @@ namespace MultifunctionalChat.Controllers
         
         public ActionResult<Message> UserPardon(Message message)
         {
-            string result = "";
             string messageUnban = message.Text.Replace("//user", "").Replace("pardon", "").Trim();
+            string result = GetErrorMessageForDoubleUserNames(messageUnban);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
 
-            var userToUnban = userService.GetList().Where(
-                user => user.Name == messageUnban.Trim()).FirstOrDefault();
             var userRoleId = userService.Get(message.UserId).RoleId;
-
+            var userToUnban = GetUserFromStringWithId(messageUnban);
             if (userToUnban == null)
             {
                 result = $"Неверный логин пользователя";
@@ -376,7 +379,7 @@ namespace MultifunctionalChat.Controllers
         
         public ActionResult<Message> UserModerator(Message message)
         {
-            string result = "";
+            string result;
             string trimmedMessage = message.Text.Replace("//user", "").Replace("moderator", "").Trim();
             string[] actionModerator = trimmedMessage.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -387,8 +390,14 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            var userToModerator = userService.GetList().Where(
-                user => user.Name == actionModerator[0].Trim()).FirstOrDefault();
+            result = GetErrorMessageForDoubleUserNames(actionModerator[0]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            var userToModerator = GetUserFromStringWithId(actionModerator[0]);
             var userRoleId = userService.Get(message.UserId).RoleId;
 
             if (userToModerator == null)
@@ -580,11 +589,17 @@ namespace MultifunctionalChat.Controllers
                 logger.LogInformation(result);
                 return NotFound(result);
             }
+            
+            result = GetErrorMessageForDoubleUserNames(connectedParts[1]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
 
+            var userToConnect = GetUserFromStringWithId(connectedParts[1]);            
             var roomToConnect = roomService.GetList().Where(
                 room => room.Name == connectedParts[0].Trim()).FirstOrDefault();
-            var userToConnect = userService.GetList().Where(
-                user => user.Name == connectedParts[1].Trim()).FirstOrDefault();
             var userTryingToRunCommand = userService.Get(message.UserId);
 
             if (roomToConnect == null)
@@ -680,10 +695,18 @@ namespace MultifunctionalChat.Controllers
                         return NotFound(result);
                     }
 
+                    result = GetErrorMessageForDoubleUserNames(connectedParts[1]);
+                    if (result != "")
+                    {
+                        logger.LogInformation(result);
+                        return NotFound(result);
+                    }
+
+                    var userToDisconnect = GetUserFromStringWithId(connectedParts[1]);
                     if (loginPos > 0 && (mutePos == -1 || mutePos > loginPos))
                     {
                         roomUser = roomUserService.GetList().Where(
-                            ru => ru.Room.Name == connectedParts[0] && ru.User.Name == connectedParts[1]).FirstOrDefault();
+                            ru => ru.Room.Name == connectedParts[0] && ru.User.Id == userToDisconnect.Id).FirstOrDefault();
                         if (roomUser == null)
                         {
                             result = $"Неверное имя пользователя";
