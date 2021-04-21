@@ -140,6 +140,22 @@
             alert('Может, вы имели в виду //user');
             return;
         }
+        else if (message.startsWith('info') || message.startsWith('/info')) {
+            alert('Может, вы имели в виду //info');
+            return;
+        }
+        else if (message.startsWith('find') || message.startsWith('/find')) {
+            alert('Может, вы имели в виду //find');
+            return;
+        }
+        else if (message.startsWith('help') || message.startsWith('/help')) {
+            alert('Может, вы имели в виду //help');
+            return;
+        }
+        else if (message.startsWith('video') || message.startsWith('/video')) {
+            alert('Может, вы имели в виду //videoCommentRandom');
+            return;
+        }
 
         const data = new FormData();
         data.append("text", message);
