@@ -246,7 +246,7 @@ namespace MultifunctionalChat.Controllers
                 string[] roomParts = text.Split(new char[] { '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (roomParts.Length > 1)
-                    room = roomsList.Where(r => r.Name == roomParts[1].Trim()).FirstOrDefault();
+                    room = roomsList.Where(r => r.Id.ToString() == roomParts[1].Trim()).FirstOrDefault();
             }
 
             return room;
@@ -505,7 +505,7 @@ namespace MultifunctionalChat.Controllers
             }
 
 
-            var userTryingToRunCommand = userService.Get(message.UserId);
+            var userTryingToRunCommand = usersList.Where(user =>user.Id == message.UserId).FirstOrDefault();
 
             if (roomName == "")
             {
@@ -543,10 +543,8 @@ namespace MultifunctionalChat.Controllers
 
         public ActionResult<Message> RoomRemove(Message message)
         {
-            string result = "";
-            string trimmedMessage = message.Text.Replace("//room", "").Replace("remove", "").Trim();
-            string roomName = trimmedMessage;
-
+            string result;
+            string roomName = message.Text.Replace("//room", "").Replace("remove", "").Trim();            
             if (roomName == "")
             {
                 result = "Неверный формат сообщения (отсутствует название комнаты)";
@@ -554,7 +552,14 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            Room roomToDelete = roomsList.Find(room => room.Name == roomName);
+            result = GetErrorMessageForDoubleRoomNames(roomName);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            Room roomToDelete = GetRoomFromStringWithId(roomName);
             if (roomToDelete == null)
             {
                 result = "Комната не найдена";
@@ -562,7 +567,7 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            var userTryingToDelete = userService.Get(message.UserId);
+            var userTryingToDelete = usersList.Where(user => user.Id == message.UserId).FirstOrDefault();
             if (message.UserId != roomToDelete.OwnerId &&
                 userTryingToDelete.RoleId.ToString() != StaticVars.ROLE_ADMIN)
             {
@@ -572,8 +577,7 @@ namespace MultifunctionalChat.Controllers
             }
 
             roomService.Delete(roomToDelete.Id);
-
-            result = $"Удалена комната с id = {roomToDelete.Id}";
+            result = $"Комната удалена";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -592,9 +596,15 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            var roomToRename = roomsList.Where(
-                room => room.Name == renamedParts[0].Trim()).FirstOrDefault();
-            var userTryingToRename = userService.Get(message.UserId);
+            result = GetErrorMessageForDoubleRoomNames(renamedParts[0]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            Room roomToRename = GetRoomFromStringWithId(renamedParts[0]);
+            var userTryingToRename = usersList.Where(user => user.Id == message.UserId).FirstOrDefault();
 
             if (roomToRename == null)
             {
