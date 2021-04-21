@@ -17,6 +17,10 @@ namespace MultifunctionalChat.Controllers
         private readonly IRepository<User> userService;
 
         private readonly ILogger<MessageController> logger;
+
+        private readonly List<Room> roomsList;
+        private readonly List<User> usersList;
+        private readonly List<RoomUser> roomUsersList;
         public MessageController(IRepository<Message> messageService, IRepository<Room> roomService,
             IRepository<User> userService, IRepository<RoomUser> roomUserService, ILogger<MessageController> logger)
         {
@@ -25,7 +29,7 @@ namespace MultifunctionalChat.Controllers
             this.roomService = roomService;
             this.userService = userService;
             this.logger = logger;
-
+                        
             //Проверяем, не пора ли разбанить людей
             foreach (RoomUser roomUser in roomUserService.GetList())
             {
@@ -49,6 +53,10 @@ namespace MultifunctionalChat.Controllers
                     userService.Update(user);
                 }
             }
+
+            roomsList = roomService.GetList();
+            roomUsersList = roomUserService.GetList();
+            usersList = userService.GetList();
         }
 
         [HttpGet]
@@ -77,7 +85,7 @@ namespace MultifunctionalChat.Controllers
             {
                 var userTryingToPost = userService.Get(message.UserId);
                 var currentRoom = roomService.Get(message.RoomId); 
-                var roomUser = roomUserService.GetList().Where(
+                var roomUser = roomUsersList.Where(
                     ru => ru.RoomsId == message.RoomId && ru.User.Id == message.UserId).FirstOrDefault();
 
                 if (userTryingToPost.RoleId.ToString() != StaticVars.ROLE_ADMIN &&  
@@ -147,7 +155,7 @@ namespace MultifunctionalChat.Controllers
                     }
                     if (messageParts.Length > 1 && messageParts[1] == "pardon")
                     {
-                        UserPardon(message);
+                        return UserPardon(message);
                     }
                 }
                 else
@@ -173,7 +181,7 @@ namespace MultifunctionalChat.Controllers
         {
             Message message = messageService.Get(id);
 
-            User userTryingToRunCommand = userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+            User userTryingToRunCommand = usersList.Where(us => us.Login == User.Identity.Name).FirstOrDefault();
 
             if (message == null)
             {
@@ -193,6 +201,68 @@ namespace MultifunctionalChat.Controllers
             return Ok($"Удалено сообщение с id = {id}");
         }
 
+        #region Проверка на наличие двух одноименных комнат/людей
+        private string GetErrorMessageForDoubleRoomNames(string roomName)
+        {
+            string result = "";
+            int roomCount = roomsList.Where(
+                room => room.Name == roomName.Trim()).ToList().Count;
+            if (roomCount > 1)
+            {
+                result = $"Комнат с таким именем много." + Environment.NewLine +
+                    "Укажите рядом с именем id комнаты." + Environment.NewLine +
+                    "Например, //room rename Имя(id) || Новое_имя";
+            }
+            return result;
+        }
+
+        private string GetErrorMessageForDoubleUserNames(string userName)
+        {
+            string result = "";
+            int userCount = usersList.Where(
+                user => user.Name == userName.Trim()).ToList().Count;
+            if (userCount > 1)
+            {
+                result = $"Пользователей с таким именем много." + Environment.NewLine +
+                    "Укажите рядом с именем id пользователя." + Environment.NewLine +
+                    "Например, //user rename Имя(id) || Новое_имя";
+            }
+            return result;
+        }
+
+        private Room GetRoomFromStringWithId(string text)
+        {
+            Room room = roomsList.Where(r => r.Name == text.Trim()).FirstOrDefault();
+
+            if (room == null && text.Contains("("))
+            {
+                string[] roomParts = text.Split(new char[] { '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (roomParts.Length > 1)
+                    room = roomsList.Where(r => r.Id.ToString() == roomParts[1].Trim()).FirstOrDefault();
+            }
+
+            return room;
+        }
+        
+        private User GetUserFromStringWithId(string text)
+        {
+            User user = usersList.Where(
+                user => user.Name == text.Trim()).FirstOrDefault();
+
+            if (user == null && text.Contains("("))
+            {
+                string[] userParts = text.Split(new char[] { '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (userParts.Length > 1)
+                    user = usersList.Where(
+                        us => us.Id.ToString() == userParts[1].Trim()).FirstOrDefault();
+            }
+
+            return user;
+        }
+        #endregion
+
         #region UserCommands
 
         public ActionResult<Message> UserRename(Message message)
@@ -208,17 +278,23 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            var userToRename = userService.GetList().Where(
-                user => user.Name == renamedParts[0].Trim()).FirstOrDefault();
-            var userRoleId = userService.GetList().Where(
-                user => message.UserId == user.Id).FirstOrDefault().RoleId;
+            result = GetErrorMessageForDoubleUserNames(renamedParts[0]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
 
+            var userToRename = GetUserFromStringWithId(renamedParts[0]);
             if (userToRename == null)
             {
                 result = $"Неверное имя пользователя";
                 logger.LogInformation(result);
                 return Unauthorized(result);
             }
+
+            var userRoleId = usersList.Where(
+                user => message.UserId == user.Id).FirstOrDefault().RoleId;
             if (userRoleId.ToString() != StaticVars.ROLE_ADMIN)
             {
                 result = $"Недостаточно прав для переименования пользователя {userToRename.Name}";
@@ -238,20 +314,25 @@ namespace MultifunctionalChat.Controllers
         {
             string result = "";
             string messageBan = message.Text.Replace("//user", "").Replace("ban", "").Trim();
-
             string[] connectedParts = messageBan.Split(new string[] { " -m " }, StringSplitOptions.RemoveEmptyEntries);
 
-            var userToBan = userService.GetList().Where(
-                user => user.Name == connectedParts[0].Trim()).FirstOrDefault();
-            var userRoleId = userService.GetList().Where(
-                user => message.UserId == user.Id).FirstOrDefault().RoleId;
+            result = GetErrorMessageForDoubleUserNames(connectedParts[0]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
 
+            var userToBan = GetUserFromStringWithId(connectedParts[0]);
             if (userToBan == null)
             {
                 result = $"Неверный логин пользователя";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
+
+            var userRoleId = usersList.Where(
+                user => message.UserId == user.Id).FirstOrDefault().RoleId;
             if (userRoleId.ToString() != StaticVars.ROLE_ADMIN && userRoleId.ToString() != StaticVars.ROLE_MODERATOR)
             {
                 result = $"Недостаточно прав для бана пользователя с id = {userToBan.Id}";
@@ -290,13 +371,16 @@ namespace MultifunctionalChat.Controllers
         
         public ActionResult<Message> UserPardon(Message message)
         {
-            string result = "";
             string messageUnban = message.Text.Replace("//user", "").Replace("pardon", "").Trim();
+            string result = GetErrorMessageForDoubleUserNames(messageUnban);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
 
-            var userToUnban = userService.GetList().Where(
-                user => user.Name == messageUnban.Trim()).FirstOrDefault();
             var userRoleId = userService.Get(message.UserId).RoleId;
-
+            var userToUnban = GetUserFromStringWithId(messageUnban);
             if (userToUnban == null)
             {
                 result = $"Неверный логин пользователя";
@@ -329,7 +413,7 @@ namespace MultifunctionalChat.Controllers
         
         public ActionResult<Message> UserModerator(Message message)
         {
-            string result = "";
+            string result;
             string trimmedMessage = message.Text.Replace("//user", "").Replace("moderator", "").Trim();
             string[] actionModerator = trimmedMessage.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -340,8 +424,14 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            var userToModerator = userService.GetList().Where(
-                user => user.Name == actionModerator[0].Trim()).FirstOrDefault();
+            result = GetErrorMessageForDoubleUserNames(actionModerator[0]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            var userToModerator = GetUserFromStringWithId(actionModerator[0]);
             var userRoleId = userService.Get(message.UserId).RoleId;
 
             if (userToModerator == null)
@@ -393,7 +483,7 @@ namespace MultifunctionalChat.Controllers
 
         public ActionResult<Message> RoomCreate(Message message)
         {
-            string result = "";
+            string result;
             string trimmedMessage = message.Text.Replace("//room", "").Replace("create", "").Trim();
 
             string roomName = trimmedMessage;
@@ -408,7 +498,7 @@ namespace MultifunctionalChat.Controllers
             }
 
 
-            var userTryingToRunCommand = userService.Get(message.UserId);
+            var userTryingToRunCommand = usersList.Where(user =>user.Id == message.UserId).FirstOrDefault();
 
             if (roomName == "")
             {
@@ -430,9 +520,7 @@ namespace MultifunctionalChat.Controllers
             }
 
 
-            Room newRoom = new Room();
-            newRoom.Name = roomName;
-            newRoom.OwnerId = message.UserId;
+            Room newRoom = new Room { Name = roomName, OwnerId = message.UserId };
             newRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = message.UserId, RoomsId = newRoom.Id } };
             if (flag == " -b")
                 newRoom.Type = 'B';
@@ -448,10 +536,8 @@ namespace MultifunctionalChat.Controllers
 
         public ActionResult<Message> RoomRemove(Message message)
         {
-            string result = "";
-            string trimmedMessage = message.Text.Replace("//room", "").Replace("remove", "").Trim();
-            string roomName = trimmedMessage;
-
+            string result;
+            string roomName = message.Text.Replace("//room", "").Replace("remove", "").Trim();            
             if (roomName == "")
             {
                 result = "Неверный формат сообщения (отсутствует название комнаты)";
@@ -459,7 +545,14 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            Room roomToDelete = roomService.GetList().Find(room => room.Name == roomName);
+            result = GetErrorMessageForDoubleRoomNames(roomName);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            Room roomToDelete = GetRoomFromStringWithId(roomName);
             if (roomToDelete == null)
             {
                 result = "Комната не найдена";
@@ -467,7 +560,7 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            var userTryingToDelete = userService.Get(message.UserId);
+            var userTryingToDelete = usersList.Where(user => user.Id == message.UserId).FirstOrDefault();
             if (message.UserId != roomToDelete.OwnerId &&
                 userTryingToDelete.RoleId.ToString() != StaticVars.ROLE_ADMIN)
             {
@@ -477,8 +570,7 @@ namespace MultifunctionalChat.Controllers
             }
 
             roomService.Delete(roomToDelete.Id);
-
-            result = $"Удалена комната с id = {roomToDelete.Id}";
+            result = $"Комната удалена";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -497,9 +589,15 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            var roomToRename = roomService.GetList().Where(
-                room => room.Name == renamedParts[0].Trim()).FirstOrDefault();
-            var userTryingToRename = userService.Get(message.UserId);
+            result = GetErrorMessageForDoubleRoomNames(renamedParts[0]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            Room roomToRename = GetRoomFromStringWithId(renamedParts[0]);
+            var userTryingToRename = usersList.Where(user => user.Id == message.UserId).FirstOrDefault();
 
             if (roomToRename == null)
             {
@@ -536,11 +634,23 @@ namespace MultifunctionalChat.Controllers
                 return NotFound(result);
             }
 
-            var roomToConnect = roomService.GetList().Where(
-                room => room.Name == connectedParts[0].Trim()).FirstOrDefault();
-            var userToConnect = userService.GetList().Where(
-                user => user.Name == connectedParts[1].Trim()).FirstOrDefault();
-            var userTryingToRunCommand = userService.Get(message.UserId);
+            result = GetErrorMessageForDoubleRoomNames(connectedParts[0]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            result = GetErrorMessageForDoubleUserNames(connectedParts[1]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            Room roomToConnect = GetRoomFromStringWithId(connectedParts[0]);
+            User userToConnect = GetUserFromStringWithId(connectedParts[1]);
+            User userTryingToRunCommand = userService.Get(message.UserId);
 
             if (roomToConnect == null)
             {
@@ -573,7 +683,7 @@ namespace MultifunctionalChat.Controllers
                 logger.LogInformation(result);
                 return NotFound(result);
             }
-            else if (roomUserService.GetList().Where(ru => ru.RoomsId == roomToConnect.Id && ru.UsersId == userToConnect.Id).FirstOrDefault() != null)
+            else if (roomUsersList.Where(ru => ru.RoomsId == roomToConnect.Id && ru.UsersId == userToConnect.Id).FirstOrDefault() != null)
             {
                 result = $"Пользователь и так состоит в комнате {roomToConnect.Name}";
                 logger.LogInformation(result);
@@ -586,7 +696,7 @@ namespace MultifunctionalChat.Controllers
             return Ok(result);
         }
 
-        public ActionResult<Message> RoomDisconnect(Message message)
+        public ActionResult<Message> RoomDisconnectMe(Message message)
         {
             string result = "";
             string trimmedMessage = message.Text.Replace("//room", "").Replace("disconnect", "").Trim();
@@ -594,89 +704,124 @@ namespace MultifunctionalChat.Controllers
             //Чисто дисконнект
             if (trimmedMessage == "")
             {
-                RoomUser roomUser = roomUserService.GetList().Where(ru => ru.RoomsId == message.RoomId && ru.UsersId == message.UserId).FirstOrDefault();
+                RoomUser roomUser = roomUsersList.Where(ru => ru.RoomsId == message.RoomId && ru.UsersId == message.UserId).FirstOrDefault();
                 roomUserService.Delete(roomUser.Id);
                 result = $"Вы вышли из комнаты {roomUser.Room.Name}";
             }
             else
             {
-                string[] connectedParts = trimmedMessage.Split(new string[] { " -l ", " -m " }, StringSplitOptions.RemoveEmptyEntries);
-
-                int loginPos = trimmedMessage.IndexOf(" -l ");
-                int mutePos = trimmedMessage.IndexOf(" -m ");
-
                 //Отсоединяемый пользователь
-                RoomUser roomUser = roomUserService.GetList().Where(
-                    ru => ru.Room.Name == connectedParts[0] && ru.UsersId == message.UserId).FirstOrDefault();
-                if (roomUser == null)
+                var roomUsers = roomUsersList.Where(ru => ru.Room.Name == trimmedMessage && ru.UsersId == message.UserId).ToList();
+                if (roomUsers == null || roomUsers.Count == 0)
                 {
                     result = $"Неверное название комнаты";
                     logger.LogInformation(result);
                     return NotFound(result);
                 }
+                else if (roomUsers.Count > 1)
+                {
+                    result = $"Комнат с таким именем много." + Environment.NewLine +
+                        "Укажите рядом с именем id комнаты." + Environment.NewLine +
+                        "Например, //user disconnect Комната(id)";
+                    logger.LogInformation(result);
+                    return NotFound(result);
+                }
 
                 //Дисконнект с комнатой
-                if (connectedParts.Length < 2)
-                {
-                    roomUserService.Delete(roomUser.Id);
-                    result = $"Вы вышли из комнаты {roomUser.Room.Name}";
-                }
-                //Дисконнект другого юзера
-                else
-                {
-                    var userTryingToRunCommand = userService.Get(message.UserId);
-
-                    if (message.UserId != roomUser.Room.OwnerId &&
-                        userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_ADMIN &&
-                        userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_MODERATOR)
-                    {
-                        result = $"Недостаточно прав для удаления людей из комнаты {connectedParts[0]}";
-                        logger.LogInformation(result);
-                        return NotFound(result);
-                    }
-
-                    if (loginPos > 0 && (mutePos == -1 || mutePos > loginPos))
-                    {
-                        roomUser = roomUserService.GetList().Where(
-                            ru => ru.Room.Name == connectedParts[0] && ru.User.Name == connectedParts[1]).FirstOrDefault();
-                        if (roomUser == null)
-                        {
-                            result = $"Неверное имя пользователя";
-                            logger.LogInformation(result);
-                            return NotFound(result);
-                        }
-
-                        //Banned
-                        roomUser.Status = 'B';
-                        roomUser.BanInterval = null;
-                        roomUser.BanStart = null;
-                    }
-                    if (mutePos > 0)
-                    {
-                        string muteTimeStr = connectedParts[1];
-                        if (loginPos > 0 && loginPos < mutePos)
-                        {
-                            muteTimeStr = connectedParts[2];
-                        }
-
-                        if (!Int32.TryParse(muteTimeStr, out int muteTime))
-                        {
-                            result = $"Время блокировки - не число";
-                            logger.LogInformation(result);
-                            return NotFound(result);
-                        }
-                        //Banned
-                        roomUser.Status = 'B';
-                        roomUser.BanInterval = muteTime;
-                        roomUser.BanStart = DateTime.Now;
-                    }
-
-                    roomUserService.Update(roomUser);
-                    result = $"Пользователь {roomUser.User.Name} отключен";
-                }
+                RoomUser roomUser = roomUsers.FirstOrDefault();
+                roomUserService.Delete(roomUser.Id);
+                result = $"Вы вышли из комнаты {roomUser.Room.Name}";
             }
+
             logger.LogInformation(result);
             return Ok(result);
+        }
+
+        public ActionResult<Message> RoomDisconnectAnotherUser(Message message)
+        {
+            string result = "";
+            string trimmedMessage = message.Text.Replace("//room", "").Replace("disconnect", "").Trim();
+            string[] connectedParts = trimmedMessage.Split(new string[] { " -l ", " -m " }, StringSplitOptions.RemoveEmptyEntries);
+
+            int loginPos = trimmedMessage.IndexOf(" -l ");
+            int mutePos = trimmedMessage.IndexOf(" -m ");
+
+            //room disconnect Мексика(29) -l Главный(17)
+            result = GetErrorMessageForDoubleRoomNames(connectedParts[0]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            result = GetErrorMessageForDoubleUserNames(connectedParts[1]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            Room room = GetRoomFromStringWithId(connectedParts[0]);
+            User user = GetUserFromStringWithId(connectedParts[1]);
+            
+            var roomUser = roomUsersList.Where(ru => ru.Room == room && ru.User == user).FirstOrDefault();
+            User userTryingToRunCommand = userService.Get(message.UserId);
+
+            if (message.UserId != roomUser.Room.OwnerId &&
+                userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_ADMIN &&
+                userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_MODERATOR)
+            {
+                result = $"Недостаточно прав для удаления людей из комнаты {connectedParts[0]}";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            if (loginPos > 0 && (mutePos == -1 || mutePos > loginPos))
+            {
+                if (roomUser == null)
+                {
+                    result = $"Неверное имя пользователя";
+                    logger.LogInformation(result);
+                    return NotFound(result);
+                }
+
+                //Banned
+                roomUser.Status = 'B';
+                roomUser.BanInterval = null;
+                roomUser.BanStart = null;
+            }
+            if (connectedParts.Length > 2 && mutePos > 0)
+            {
+                string muteTimeStr = connectedParts[2];
+                if (!Int32.TryParse(muteTimeStr, out int muteTime))
+                {
+                    result = $"Время блокировки - не число";
+                    logger.LogInformation(result);
+                    return NotFound(result);
+                }
+
+                roomUser.Status = 'B';
+                roomUser.BanInterval = muteTime;
+                roomUser.BanStart = DateTime.Now;
+            }
+
+            roomUserService.Update(roomUser);
+            result = $"Пользователь {roomUser.User.Name} отключен";
+            logger.LogInformation(result);
+            return Ok(result);
+        }
+
+        public ActionResult<Message> RoomDisconnect(Message message)
+        {
+            string trimmedMessage = message.Text.Replace("//room", "").Replace("disconnect", "").Trim();
+            string[] connectedParts = trimmedMessage.Split(new string[] { " -l ", " -m " }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (connectedParts.Length == 1)
+                return RoomDisconnectMe(message);
+            else
+            {
+                return RoomDisconnectAnotherUser(message);
+            }
         }
         
         public ActionResult<Message> RoomMute(Message message)
@@ -694,9 +839,18 @@ namespace MultifunctionalChat.Controllers
                 logger.LogInformation(result);
                 return NotFound(result);
             }
-            RoomUser roomUser = roomUserService.GetList().Where(
-                ru => ru.RoomsId == message.RoomId && ru.User.Name == connectedParts[0].Trim()).FirstOrDefault();
-            var userTryingToRunCommand = userService.Get(message.UserId);
+
+            result = GetErrorMessageForDoubleUserNames(connectedParts[0]);
+            if (result != "")
+            {
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            User userToMute = GetUserFromStringWithId(connectedParts[0]);
+            RoomUser roomUser = roomUsersList.Where(
+                ru => ru.RoomsId == message.RoomId && ru.User.Id == userToMute.Id).FirstOrDefault();
+            User userTryingToRunCommand = userService.Get(message.UserId);
 
             if (roomUser == null)
             {
@@ -742,32 +896,45 @@ namespace MultifunctionalChat.Controllers
         {
             string result = "";
             string trimmedMessage = message.Text.Replace("//room", "").Replace("speak", "").Trim();
-
             string[] connectedParts = trimmedMessage.Split(new string[] { "-l " }, StringSplitOptions.RemoveEmptyEntries);
-            int loginPos = trimmedMessage.IndexOf("-l ");
-
-            if (loginPos < 0)
+           
+            if (!trimmedMessage.Contains("-l "))
             {
                 result = "Неверный формат сообщения (не найден флаг -l)";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
-            if (connectedParts.Length > 1)
+            else if (connectedParts.Length > 1)
             {
                 result = "Неверный формат сообщения (текст перед флагом -l)";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
-            RoomUser roomUser = roomUserService.GetList().Where(
-                ru => ru.RoomsId == message.RoomId && ru.User.Name == connectedParts[0].Trim()).FirstOrDefault();
-            var userTryingToRunCommand = userService.Get(message.UserId);
 
-            if (roomUser == null)
+            var roomUsers = roomUsersList.Where(
+                ru => ru.RoomsId == message.RoomId && ru.User.Name == connectedParts[0].Trim()).ToList();
+            if (roomUsers.Count > 1)
+            {
+                result = "В комнате больше одного пользователя с таким именем. Укажите в скобках его id";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            //Если пользователей было больше одного, ищем id в строке
+            var userToMute = GetUserFromStringWithId(connectedParts[0]); 
+            roomUsers = roomUsersList.Where(
+                ru => ru.RoomsId == message.RoomId && ru.User.Id == userToMute.Id).ToList();
+            if (roomUsers == null || roomUsers.Count == 0)
             {
                 result = $"Неверное имя пользователя";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
+
+
+            RoomUser roomUser = roomUsers.FirstOrDefault();
+            var userTryingToRunCommand = userService.Get(message.UserId);
+
             if (message.UserId != roomUser.Room.OwnerId &&
                 userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_ADMIN &&
                 userTryingToRunCommand.RoleId.ToString() != StaticVars.ROLE_MODERATOR)

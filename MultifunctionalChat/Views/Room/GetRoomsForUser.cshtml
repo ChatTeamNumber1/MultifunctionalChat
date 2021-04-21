@@ -4,7 +4,7 @@
 @foreach (Room chatRoom in ViewBag.chatRooms)
 {
     <a href="/Room/Index?Id=@chatRoom.Id">
-        <h3>
+        <h3 title="id = @chatRoom.Id">
             @chatRoom.Name
             @if (chatRoom.Type == 'B')
             {

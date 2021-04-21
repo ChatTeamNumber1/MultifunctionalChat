@@ -16,10 +16,14 @@ namespace MultifunctionalChat.Controllers
     public class AccountController : Controller
     {
         private IRepository<User> service;
+        private IRepository<Room> roomService;
+        private IRepository<RoomUser> roomUserService;
 
-        public AccountController(IRepository<User> context)
+        public AccountController(IRepository<User> context, IRepository<Room> roomService, IRepository<RoomUser> roomUserService)
         {
             service = context;
+            this.roomService = roomService;
+            this.roomUserService = roomUserService;
         }
 
 
@@ -83,11 +87,14 @@ namespace MultifunctionalChat.Controllers
         {
             if (ModelState.IsValid)
             {
-                User user = new User { Name = model.Name, Login = model.Login, Password = EncryptPassword(model.Password), RoleId = Convert.ToInt32(StaticVars.ROLE_USER) };
+                User user = new User { Name = model.Name, Login = model.Login, Password = EncryptPassword(model.Password), RoleId = Convert.ToInt32(StaticVars.ROLE_USER)};
                 // добавляем пользователя
                 if (service.GetList().FirstOrDefault(x => x.Login == model.Login) == null)
                 {
                     service.Create(user);
+                    var defaultRoom = roomService.Get(Convert.ToInt32(StaticVars.DEFAULT_ROOM_ID));
+                    roomUserService.Create(new RoomUser { RoomsId = defaultRoom.Id, Room = defaultRoom, User = user, UsersId = user.Id });
+
                     await Authenticate(user); // аутентификация
                     return RedirectToAction("Index", "Room", StaticVars.DEFAULT_ROOM_ID);// переадресация на метод Index
                 }

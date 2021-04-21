@@ -64,8 +64,6 @@ namespace MultifunctionalChat.Services
                 newContext.SaveChanges();
 
                 transaction.Commit();
-                int userIndex = usersList.IndexOf(Get(updatedUser.Id));
-                usersList[userIndex] = updatedUser;
             }
             catch (Exception)
             {
