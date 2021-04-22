@@ -1,0 +1,11 @@
+﻿@using MultifunctionalChat.Models;
+
+<h3>Все комнаты</h3>
+@foreach (Room room in ViewBag.rooms)
+{
+    <a href="/Room/Index?Id=@room.Id">
+        <h3>
+            @room.Name
+        </h3>
+    </a>
+}

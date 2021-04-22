@@ -68,6 +68,12 @@ namespace MultifunctionalChat.Controllers
             return PartialView("GetRoomsForUser");
         }
 
+        public ActionResult AllRooms()
+        {
+            ViewBag.rooms = _roomService.GetList();
+            return PartialView("AllRooms");
+        }
+
         [HttpGet]
         public ActionResult<List<Room>> Get()
         {
