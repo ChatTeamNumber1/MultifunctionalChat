@@ -3,9 +3,7 @@
 <h3>Все комнаты</h3>
 @foreach (Room room in ViewBag.rooms)
 {
-    <a href="/Room/Index?Id=@room.Id">
-        <h3>
-            @room.Name
-        </h3>
-    </a>
+    <div>
+        <span title="id = @room.Id">@room.Name</span>
+    </div>
 }
