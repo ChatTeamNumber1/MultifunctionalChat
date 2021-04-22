@@ -13,7 +13,16 @@ namespace MultifunctionalChat
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            string channelId = 
+                Controllers.YoutubeController.GetChannelIdByName("Прикольное проектное программирование");
+            if (channelId != "")
+            {
+                string name = Controllers.YoutubeController.GetChannelNameById(channelId);
+                var Videos = Controllers.YoutubeController.GetVideosByChannel(channelId);
+            }
+
+
+            //CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
