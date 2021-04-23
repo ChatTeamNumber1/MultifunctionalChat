@@ -1,4 +1,6 @@
 ﻿@using MultifunctionalChat.Models;
+@using MultifunctionalChat;
+
 <head>
     <meta charset="utf-8" />
     <title>Комната "@ViewBag.room.Name"</title>
@@ -16,6 +18,18 @@
                 <div id="UsersList">
                     @await Html.PartialAsync("GetUsers")
                 </div>
+                @if (@ViewBag.currentUser.RoleId.ToString() == StaticVars.ROLE_ADMIN || @ViewBag.currentUser.RoleId.ToString() == StaticVars.ROLE_MODERATOR)
+                {
+                    <br />
+                    <br />
+                    <div>
+                        <input style="width:80%" type="button" onClick='location.href="/User/AllUsers"' value="Список всех пользователей" />
+                    </div>
+                    <br />
+                    <div>
+                        <input style="width:80%" type="button" onClick='location.href="/Room/AllRooms"' value="Список всех комнат" />
+                    </div>
+                }
             </td>
             <td width="75%">
                 <div id="header"></div>

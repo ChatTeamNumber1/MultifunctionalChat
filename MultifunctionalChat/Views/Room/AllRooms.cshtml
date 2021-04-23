@@ -1,0 +1,9 @@
+﻿@using MultifunctionalChat.Models;
+
+<h3>Все комнаты</h3>
+@foreach (Room room in ViewBag.rooms)
+{
+    <div>
+        <span title="id = @room.Id">@room.Name</span>
+    </div>
+}

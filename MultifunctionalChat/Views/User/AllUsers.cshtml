@@ -1,0 +1,17 @@
+﻿@using MultifunctionalChat.Models;
+
+<h3>Список пользователей</h3>
+@foreach (var user in ViewBag.users)
+{
+<div>
+    <span title="id = @user.Id">@user.Name</span>
+    <img title="@user.UserRole.Name" height="20" src="@user.UserRole.ImageAddress" />
+
+    @if (user.RoleId == 4)
+    {
+        <span style="color:red" title="Пользователь не может писать сообщения">&nbsp;(Забанен)</span>
+        <span>&nbsp;Время начала бана: @user.BanStart </span>
+        <span>&nbsp;Продолжительность: @user.BanInterval</span>
+    }
+</div>
+}
