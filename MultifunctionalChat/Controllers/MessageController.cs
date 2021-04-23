@@ -209,8 +209,8 @@ namespace MultifunctionalChat.Controllers
                 room => room.Name == roomName.Trim()).ToList().Count;
             if (roomCount > 1)
             {
-                result = $"Комнат с таким именем много." + Environment.NewLine +
-                    "Укажите рядом с именем id комнаты." + Environment.NewLine +
+                result = $"Комнат с таким названием много." + Environment.NewLine +
+                    "Укажите рядом с названием id комнаты." + Environment.NewLine +
                     "Например, //room rename Имя(id) || Новое_имя";
             }
             return result;
@@ -305,7 +305,7 @@ namespace MultifunctionalChat.Controllers
             string newUserName = renamedParts[1].Trim();
             userToRename.Name = newUserName;
             userService.Update(userToRename);
-            result = $"Обновлены данные о пользователе с id = {userToRename.Id}";   
+            result = $"Обновлены данные о пользователе {userToRename.Name} с id = {userToRename.Id}";   
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -335,13 +335,13 @@ namespace MultifunctionalChat.Controllers
                 user => message.UserId == user.Id).FirstOrDefault().RoleId;
             if (userRoleId.ToString() != StaticVars.ROLE_ADMIN && userRoleId.ToString() != StaticVars.ROLE_MODERATOR)
             {
-                result = $"Недостаточно прав для бана пользователя с id = {userToBan.Id}";
+                result = $"Недостаточно прав для бана пользователя {userToBan.Name} с id = {userToBan.Id}";
                 logger.LogInformation(result);
                 return NotFound(result);
             } 
             if (userToBan.RoleId == Convert.ToInt32(StaticVars.ROLE_BANNED))
             {
-                result = $"Уже забанен пользователь с id = {userToBan.Id}";
+                result = $"Уже забанен пользователь {userToBan.Name}";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
@@ -364,7 +364,7 @@ namespace MultifunctionalChat.Controllers
             }
 
             userService.Update(userToBan);
-            result = $"Забанен пользователь с id = {userToBan.Id}";
+            result = $"Пользователь {userToBan.Name} забанен на {userToBan.BanInterval} минут";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -389,7 +389,7 @@ namespace MultifunctionalChat.Controllers
             }
             else if (userToUnban.RoleId.ToString() != StaticVars.ROLE_BANNED)
             {
-                result = $"Не забанен пользователь с id = {userToUnban.Id}";
+                result = $"Не забанен пользователь {userToUnban.Name} с id = {userToUnban.Id}";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
@@ -405,7 +405,7 @@ namespace MultifunctionalChat.Controllers
             userToUnban.BanInterval = null;
             userToUnban.BanStart = null;
             userService.Update(userToUnban);
-            result = $"Разбанен пользователь с id = {userToUnban.Id}";
+            result = $"Разбанен пользователь {userToUnban.Name} с id = {userToUnban.Id}";
 
             logger.LogInformation(result);
             return Ok(result);
@@ -419,7 +419,7 @@ namespace MultifunctionalChat.Controllers
 
             if (actionModerator.Length < 2)
             {
-                result = "Неверный формат сообщения (не найдено действие)";
+                result = "Неверный формат сообщения (уточните действие с помощью флагов -n или -d)";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
@@ -457,7 +457,7 @@ namespace MultifunctionalChat.Controllers
 
                 userToModerator.RoleId = Convert.ToInt32(StaticVars.ROLE_MODERATOR);
                 userService.Update(userToModerator);
-                result = $"Назначен модератором пользователь с id = {userToModerator.Id}";
+                result = $"Назначен модератором пользователь {userToModerator.Name} с id = {userToModerator.Id}";
             }
             else if (actionModerator[1].Trim() == "-d")
             {
@@ -470,7 +470,7 @@ namespace MultifunctionalChat.Controllers
 
                 userToModerator.RoleId = Convert.ToInt32(StaticVars.ROLE_USER);
                 userService.Update(userToModerator);
-                result = $"Разжалован из модераторов пользователь с id = {userToModerator.Id}";
+                result = $"Разжалован из модераторов пользователь {userToModerator.Name} с id = {userToModerator.Id}";
             }
 
             logger.LogInformation(result);
@@ -529,7 +529,7 @@ namespace MultifunctionalChat.Controllers
 
             roomService.Create(newRoom);
 
-            result = $"Создана комната с id = {newRoom.Id}";
+            result = $"Создана комната {newRoom.Name}";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -555,7 +555,7 @@ namespace MultifunctionalChat.Controllers
             Room roomToDelete = GetRoomFromStringWithId(roomName);
             if (roomToDelete == null)
             {
-                result = "Комната не найдена";
+                result = $"Комната не найдена";
                 logger.LogError(result);
                 return NotFound(result);
             }
@@ -570,7 +570,7 @@ namespace MultifunctionalChat.Controllers
             }
 
             roomService.Delete(roomToDelete.Id);
-            result = $"Комната удалена";
+            result = $"Комната {roomToDelete.Name} удалена";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -616,7 +616,7 @@ namespace MultifunctionalChat.Controllers
             string newRoomName = renamedParts[1].Trim();
             roomToRename.Name = newRoomName;
             roomService.Update(roomToRename);
-            result = $"Обновлены данные о комнате с id = {roomToRename.Id}";
+            result = $"Обновлены данные о комнате {roomToRename.Name}";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -691,7 +691,7 @@ namespace MultifunctionalChat.Controllers
             }
 
             roomUserService.Create(new RoomUser { RoomsId = roomToConnect.Id, Room = roomToConnect, User = userToConnect, UsersId = userToConnect.Id });
-            result = $"Обновлены данные о комнате с id = {roomToConnect.Id}";
+            result = $"Обновлены данные о комнате {roomToConnect.Name}";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -887,7 +887,7 @@ namespace MultifunctionalChat.Controllers
             }
 
             roomUserService.Update(roomUser);
-            result = $"Пользователь {roomUser.User.Name} Не может говорить";            
+            result = $"Пользователь {roomUser.User.Name} не может писать сообщения в течение {roomUser.BanInterval} минут";            
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -948,7 +948,7 @@ namespace MultifunctionalChat.Controllers
             roomUser.BanInterval = null;
             roomUser.BanStart = null;
             roomUserService.Update(roomUser);
-            result = $"Пользователь {roomUser.User.Name} снова может говорить";
+            result = $"Пользователь {roomUser.User.Name} снова может писать сообщения";
             logger.LogInformation(result);
             return Ok(result);
         }
