@@ -99,6 +99,7 @@ namespace MultifunctionalChat.Controllers
         public static string GetVideoIdByNameAndChannel(string channelId, string videoName)
         {
             string videoId = "";
+            videoName = videoName.Replace("#", "");
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(
                 "https://youtube.googleapis.com/youtube/v3/search?" +

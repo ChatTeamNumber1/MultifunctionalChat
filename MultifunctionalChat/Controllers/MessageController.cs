@@ -82,7 +82,7 @@ namespace MultifunctionalChat.Controllers
             string result = "";
 
             //Обычные сообщения
-            if (!message.Text.Trim().StartsWith("//"))
+            if (message.Text.Trim() != "" && !message.Text.Trim().StartsWith("//"))
             {
                 var userTryingToPost = userService.Get(message.UserId);
                 var currentRoom = roomService.Get(message.RoomId); 
