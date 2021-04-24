@@ -1004,9 +1004,7 @@ namespace MultifunctionalChat.Controllers
 
             var currentUser = usersList.Where(user => user.Id == message.UserId).FirstOrDefault();
             var roomUser = roomUsersList.Where(room => room.RoomsId == message.RoomId && room.UsersId == message.UserId).FirstOrDefault();
-
-            var roomsAvailable = currentUser.Rooms;
-
+                        
             string commonCommands = "//room create {Название комнаты} - создать комнату (-c приватная комната, -b чат-бот комната)"
                 + Environment.NewLine + "//room connect {Название комнаты} -l {login пользователя} - добавить пользователя в комнату "
                 + Environment.NewLine + "//room disconnect - выйти из текущей комнаты "
@@ -1029,6 +1027,8 @@ namespace MultifunctionalChat.Controllers
             string adminCommands = Environment.NewLine + "//user moderator {login пользователя} - действия над модераторами " +
                 "(-n - назначить пользователя модератором, -d - разжаловать пользователя)";
 
+            //На случай если захочется справки по всем комнатам
+            var roomsAvailable = currentUser.Rooms.Where(room => room.Id == message.RoomId).ToList();
             foreach (var room in roomsAvailable)
             {
                 if (room.Name != "HelpBot({ currentUser.Name})")
@@ -1085,13 +1085,29 @@ namespace MultifunctionalChat.Controllers
                     listOfResults.AppendLine(currentResult);
                 }
             }
+            
             CreateRoomAndMessageForHelp(message, currentUser, listOfResults);
 
             result = $"Получена информация по доступным командам в комнате HelpBot({currentUser.Name})";
             logger.LogInformation(result);
             return Ok(result);
         }
-        
+
+        public void CreateRoomAndMessageForHelp(Message message, User currentUser, StringBuilder listOfResults)
+        {
+            Room helpRoom = new Room();
+            helpRoom = currentUser.Rooms.Find(room => room.Name == $"HelpBot({currentUser.Name})");
+            if (helpRoom == null)
+            {
+                helpRoom = new Room { Name = $"HelpBot({currentUser.Name})", OwnerId = message.UserId, Type = 'B', };
+                helpRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = message.UserId, RoomsId = helpRoom.Id } };
+                roomService.Create(helpRoom);
+            }
+
+            Message helpMessage = new Message { Text = listOfResults.ToString(), UserId = currentUser.Id, RoomId = helpRoom.Id };
+            messageService.Create(helpMessage);
+        }
+
         #region VideoCommands
         public ActionResult<Message> ChannelInfo(Message message)
         {
@@ -1198,21 +1214,6 @@ namespace MultifunctionalChat.Controllers
             result = $"Мы все нашли";
             logger.LogInformation(result);
             return Ok(result);
-        }
-
-        public void CreateRoomAndMessageForHelp (Message message, User currentUser, StringBuilder listOfResults)
-        {
-            Room helpRoom = new Room();
-            helpRoom = currentUser.Rooms.Find(room => room.Name == $"HelpBot({currentUser.Name})");
-            if (helpRoom == null)
-            {
-                helpRoom = new Room { Name = $"HelpBot({currentUser.Name})", OwnerId = message.UserId, Type = 'B', };
-                helpRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = message.UserId, RoomsId = helpRoom.Id } };
-                roomService.Create(helpRoom);
-            }
-            
-            Message helpMessage = new Message { Text = listOfResults.ToString(), UserId = currentUser.Id, RoomId = helpRoom.Id };
-            messageService.Create(helpMessage);
         }
 
         public ActionResult<Message> VideoGetComment(Message message)
