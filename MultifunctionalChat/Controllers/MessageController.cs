@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MultifunctionalChat.Models;
@@ -157,6 +158,10 @@ namespace MultifunctionalChat.Controllers
                     {
                         return UserPardon(message);
                     }
+                }
+                if (messageParts[0] == "//help")
+                {
+                    return ListAvailableCommands(message);
                 }
                 else
                 {
@@ -954,5 +959,116 @@ namespace MultifunctionalChat.Controllers
         }
 
         #endregion
+
+        public ActionResult<Message> ListAvailableCommands(Message message)
+        {
+            string result = "";
+            string currentResult = "";
+            StringBuilder listOfResults = new StringBuilder();
+
+            var currentUser = usersList.Where(user => user.Id == message.UserId).FirstOrDefault();
+            var roomUser = roomUsersList.Where(room => room.RoomsId == message.RoomId && room.UsersId == message.UserId).FirstOrDefault();
+
+            var roomsAvailable = currentUser.Rooms;
+
+            string commonCommands = "//room create {Название комнаты} - создать комнату (-c приватная комната, -b чат-бот комната)"
+                + Environment.NewLine + "//room connect {Название комнаты} -l {login пользователя} - добавить пользователя в комнату "
+                + Environment.NewLine + "//room disconnect - выйти из текущей комнаты "
+                + Environment.NewLine + "//room disconnect {Название комнаты} - выйти из заданной комнаты ";
+
+            string ownerCommands = Environment.NewLine + "//room remove {Название комнаты} - удалить комнату"
+                + Environment.NewLine + "//room rename {Название комнаты} - переименовать комнату"
+                + Environment.NewLine + "//user rename {имя пользователя}||{Новое имя пользователя} - переименовать пользователя";
+
+            string ownerAndModerCommands = Environment.NewLine + "//room disconnect {Название комнаты} -l {login пользователя} - выгнать пользователя из комнаты " +
+                "(60 мин, либо -m {Количество минут} - время, на которое пользователь не сможет войти)"
+                + Environment.NewLine + "//room mute -l {login пользователя} - пользователь не сможет писать в текущей комнате " +
+                "(10 мин, либо -m {Количество минут} - время mute режима)"
+                + Environment.NewLine + "//room speak -l {login пользователя} - пользователь снова сможет писать в текущей комнате";
+
+            string moderCommands = Environment.NewLine + "//user ban {login пользователя} - выгнать пользователя из всех комнат " +
+                "(навсегда, либо -m {Количество минут} - время, на которое пользователь не сможет войти)"
+                + Environment.NewLine + "//user pardon {login пользователя} - разблокировать пользователя во всех комнатах";
+
+            string adminCommands = Environment.NewLine + "//user moderator {login пользователя} - действия над модераторами " +
+                "(-n - назначить пользователя модератором, -d - разжаловать пользователя)";
+
+            foreach (var room in roomsAvailable)
+            {
+                if (room.Name != "HelpBot({ currentUser.Name})")
+                {
+                    currentResult = $"В комнате'{room.Name}' Вам доступны общие команды: {commonCommands}. ";
+
+                    int roleId = currentUser.RoleId;
+
+                    switch (roleId)
+                    {
+                        case 1:
+                            currentResult = Environment.NewLine + $"Как администратору Вам доступны команды: " + Environment.NewLine +
+                            $"{commonCommands}" + Environment.NewLine + $"{ownerCommands}, {ownerAndModerCommands}, {moderCommands}, {adminCommands}";
+                            listOfResults.AppendLine(currentResult);
+                            CreateRoomAndMessageForHelp(message, currentUser, listOfResults);
+                            result = "Получена информация по доступным командам в комнате HelpBot({currentUser.Name})";
+                            logger.LogInformation(result);
+                            return Ok(result);
+
+                        case 2:
+                            if (currentUser.Id == room.OwnerId)
+                            {
+                                currentResult = String.Concat(currentResult, $"Как модератору и владельцу комнаты '{room.Name}' Вам доступны команды: " +
+                                Environment.NewLine + $"{ownerCommands}, {ownerAndModerCommands}, {moderCommands}");
+                            }
+                            else
+                            {
+                                currentResult = String.Concat(currentResult, $"Как модератору комнаты '{room.Name}' Вам доступны команды: "
+                                   + Environment.NewLine + $"{ownerAndModerCommands}, {moderCommands}");
+                            }
+                            break;
+
+                        case 3:
+                            if (currentUser.Id == room.OwnerId)
+                            {
+                                currentResult = String.Concat(currentResult, $"Как владельцу комнаты '{room.Name}' Вам доступны команды: "
+                                + Environment.NewLine + $"{ownerCommands}, {ownerAndModerCommands}");
+                            }
+                            break;
+
+                        case 4:
+                            if (roomUser.Status == 'B')
+                            {
+                                result = $"Вы забанены. Доступные команды отсутствуют. ";
+                                logger.LogInformation(result);
+                                return Ok(result);
+                            }
+                            else if (roomUser.Status == 'M')
+                            {
+                                currentResult = $"Ваше право писать сообщения в комнате '{room.Name}' ограничено. Доступны команды только для других комнат. ";
+                            }
+                            break;
+                    }
+                    listOfResults.AppendLine(currentResult);
+                }
+            }
+            CreateRoomAndMessageForHelp(message, currentUser, listOfResults);
+
+            result = $"Получена информация по доступным командам в комнате HelpBot({currentUser.Name})";
+            logger.LogInformation(result);
+            return Ok(result);
+        }
+
+        public void CreateRoomAndMessageForHelp (Message message, User currentUser, StringBuilder listOfResults)
+        {
+            Room helpRoom = new Room();
+            helpRoom = currentUser.Rooms.Find(room => room.Name == $"HelpBot({currentUser.Name})");
+            if (helpRoom == null)
+            {
+            helpRoom = new Room { Name = $"HelpBot({currentUser.Name})", OwnerId = message.UserId, Type = 'C', };
+            helpRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = message.UserId, RoomsId = helpRoom.Id } };
+            roomService.Create(helpRoom);
+            }
+            
+            Message helpMessage = new Message { Text = listOfResults.ToString(), UserId = currentUser.Id, RoomId = helpRoom.Id };
+            messageService.Create(helpMessage);
+        }
     }
 }
