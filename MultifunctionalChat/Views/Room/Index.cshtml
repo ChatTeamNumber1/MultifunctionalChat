@@ -61,7 +61,7 @@
     window.setInterval(function () {
         var elem = document.getElementById('chatroom');
         elem.scrollTop = elem.scrollHeight;
-    }, 5000);
+    }, 500);
 
     const hubConnection = new signalR.HubConnectionBuilder()
         .withUrl("/chat")
@@ -76,11 +76,11 @@
             return;
         }
         var xhr = new XMLHttpRequest();
-        xhr.open("get", "/Room/GetMessages", true);
+        xhr.open("get", "/Room/GetMessages?id=@ViewBag.roomId", true);
         xhr.send();
         xhr.onload = function () {
             document.getElementById("chatroom").innerHTML = xhr.responseText;
-            alert("1");
+            console.log(xhr);
         };
     });
 
