@@ -13,7 +13,9 @@ namespace MultifunctionalChat.Models
         //Владелец комнаты
         [ForeignKey("User")]
         public int OwnerId { get; set; }
-
+        /// <summary>
+        /// Тип комнаты (пустой, B, C)
+        /// </summary>
         public char? Type { get; set; }
 
         //Все пользователи

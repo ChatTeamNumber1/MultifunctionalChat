@@ -160,12 +160,15 @@ namespace MultifunctionalChat.Controllers
                 }
                 else if (messageParts[0] == "//info")
                 {
+                    return ChannelInfo(message);
                 }
                 else if (messageParts[0] == "//find")
                 {
+                    return VideoFind(message);
                 }
                 else if (messageParts[0] == "//videoCommentRandom")
                 {
+                    return VideoGetComment(message);
                 }
                 else
                 {
@@ -301,6 +304,12 @@ namespace MultifunctionalChat.Controllers
                 logger.LogInformation(result);
                 return Unauthorized(result);
             }
+            if (userToRename.Id.ToString() == StaticVars.YOUTUBE_BOT_ID)
+            {
+                result = $"Не трогайте бота!!!";
+                logger.LogInformation(result);
+                return Unauthorized(result);
+            }
 
             var userRoleId = usersList.Where(
                 user => message.UserId == user.Id).FirstOrDefault().RoleId;
@@ -338,6 +347,12 @@ namespace MultifunctionalChat.Controllers
                 result = $"Неверный логин пользователя";
                 logger.LogInformation(result);
                 return NotFound(result);
+            }
+            if (userToBan.Id.ToString() == StaticVars.YOUTUBE_BOT_ID)
+            {
+                result = $"Не трогайте бота!!!";
+                logger.LogInformation(result);
+                return Unauthorized(result);
             }
 
             var userRoleId = usersList.Where(
@@ -396,6 +411,12 @@ namespace MultifunctionalChat.Controllers
                 logger.LogInformation(result);
                 return NotFound(result);
             }
+            else if (userToUnban.Id.ToString() == StaticVars.YOUTUBE_BOT_ID)
+            {
+                result = $"Не трогайте бота!!!";
+                logger.LogInformation(result);
+                return Unauthorized(result);
+            }
             else if (userToUnban.RoleId.ToString() != StaticVars.ROLE_BANNED)
             {
                 result = $"Не забанен пользователь с id = {userToUnban.Id}";
@@ -448,6 +469,12 @@ namespace MultifunctionalChat.Controllers
                 result = $"Неверный логин пользователя";
                 logger.LogInformation(result);
                 return NotFound(result);
+            }
+            else if (userToModerator.Id.ToString() == StaticVars.YOUTUBE_BOT_ID)
+            {
+                result = $"Не трогайте бота!!!";
+                logger.LogInformation(result);
+                return Unauthorized(result);
             }
             else if (userRoleId.ToString() != StaticVars.ROLE_ADMIN)
             {
@@ -958,6 +985,172 @@ namespace MultifunctionalChat.Controllers
             roomUser.BanStart = null;
             roomUserService.Update(roomUser);
             result = $"Пользователь {roomUser.User.Name} снова может говорить";
+            logger.LogInformation(result);
+            return Ok(result);
+        }
+
+        #endregion
+
+        #region VideoCommands
+        public ActionResult<Message> ChannelInfo(Message message)
+        {
+            string result;
+            string trimmedMessage = message.Text.Replace("//info", "").Trim();
+            Room room = roomsList.Where(room => room.Id == message.RoomId).FirstOrDefault();
+            if (room.Type != 'B')
+            {
+                result = $"Полегче! Такое можно писать только в комнате с ботом";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            string channelName = trimmedMessage;
+            string channelId = YoutubeController.GetChannelIdByName(channelName);
+            if (channelId == "")
+            {
+                result = $"Канал не найден! Проверьте правильность названия";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            string trueChannelName = YoutubeController.GetChannelNameById(channelId);
+            var Videos = YoutubeController.GetVideosByChannel(channelId);
+
+            Message mess = new Message
+            {
+                RoomId = room.Id,
+                Text = "Информация по запросу: " + message.Text +
+                Environment.NewLine + "Название канала: " + trueChannelName,
+                UserId = Convert.ToInt32(StaticVars.YOUTUBE_BOT_ID)
+            };
+            messageService.Create(mess);
+
+            mess = new Message
+            {
+                RoomId = room.Id,
+                Text = "Список видео" + Environment.NewLine +
+                String.Join("<br/>", Videos),
+                UserId = Convert.ToInt32(StaticVars.YOUTUBE_BOT_ID)
+            };
+            messageService.Create(mess);
+
+            result = $"Мы все нашли";
+            logger.LogInformation(result);
+            return Ok(result);
+        }
+        public ActionResult<Message> VideoFind(Message message)
+        {
+            string result;
+            string trimmedMessage = message.Text.Replace("//find", "").Trim();
+            Room room = roomsList.Where(room => room.Id == message.RoomId).FirstOrDefault();
+            if (room.Type != 'B')
+            {
+                result = $"Полегче! Такое можно писать только в комнате с ботом";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            //Тут через || идут названия канала и видео
+            string[] messageParts = trimmedMessage.Split(new string[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (messageParts.Length < 2)
+            {
+                result = "Неверный формат сообщения (не найдены ||)";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            string channelName = messageParts[0];
+            string channelId = YoutubeController.GetChannelIdByName(channelName);
+            if (channelId == "")
+            {
+                result = $"Канал не найден! Проверьте правильность названия";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            string videoWithFlags = messageParts[1];
+            string[] optionsParts = videoWithFlags.Split(new string[] { "-l", "-v" }, StringSplitOptions.RemoveEmptyEntries);
+            string videoName = optionsParts[0];
+            string videoId = YoutubeController.GetVideoIdByNameAndChannel(channelId, videoName);
+            Dictionary<string, string> videoInfo = YoutubeController.GetVideoInfo(videoId);
+            if (videoInfo == null || videoInfo.Count < 3)
+            {
+                result = $"Видео не найдено! Проверьте правильность названия";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            Message mess = new Message
+            {
+                RoomId = room.Id,
+                Text = "Информация по запросу: " + message.Text +
+                Environment.NewLine + "Ссылка на ролик: " + videoInfo["address"]
+            };
+            if (videoWithFlags.IndexOf("-l") > -1)
+                mess.Text += Environment.NewLine + "Лайков: " + videoInfo["likes"];
+            if (videoWithFlags.IndexOf("-l") > -1)
+                mess.Text += Environment.NewLine + "Просмотров: " + videoInfo["views"];
+            mess.UserId = Convert.ToInt32(StaticVars.YOUTUBE_BOT_ID);
+            messageService.Create(mess);
+
+            result = $"Мы все нашли";
+            logger.LogInformation(result);
+            return Ok(result);
+        }
+
+        public ActionResult<Message> VideoGetComment(Message message)
+        {
+            string result;
+            string trimmedMessage = message.Text.Replace("//videoCommentRandom", "").Trim();
+            Room room = roomsList.Where(room => room.Id == message.RoomId).FirstOrDefault();
+            if (room.Type != 'B')
+            {
+                result = $"Полегче! Такое можно писать только в комнате с ботом";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            //Тут через || идут названия канала и видео
+            string[] messageParts = trimmedMessage.Split(new string[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (messageParts.Length < 2)
+            {
+                result = "Неверный формат сообщения (не найдены ||)";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            string channelName = messageParts[0];
+            string channelId = YoutubeController.GetChannelIdByName(channelName);
+            if (channelId == "")
+            {
+                result = $"Канал не найден! Проверьте правильность названия";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            string videoName = messageParts[1];
+            string videoId = YoutubeController.GetVideoIdByNameAndChannel(channelId, videoName);
+            Dictionary<string, string> randomComment = YoutubeController.GetRandomComment(videoId);
+            if (randomComment == null || randomComment.Count < 2)
+            {
+                result = $"Видео не найдено! Проверьте правильность названия";
+                logger.LogInformation(result);
+                return NotFound(result);
+            }
+
+            Message mess = new Message
+            {
+                RoomId = room.Id,
+                Text = "Информация по запросу: " + message.Text +
+                Environment.NewLine + "Автор: " + randomComment["user"] +
+                Environment.NewLine + "Текст: " + randomComment["text"],
+                UserId = Convert.ToInt32(StaticVars.YOUTUBE_BOT_ID)
+            };
+            messageService.Create(mess);
+
+            result = $"Мы все нашли";
             logger.LogInformation(result);
             return Ok(result);
         }

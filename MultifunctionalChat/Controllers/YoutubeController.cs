@@ -91,9 +91,7 @@ namespace MultifunctionalChat.Controllers
                 commentInfo.Add("user", commentData.snippet.topLevelComment.snippet.authorDisplayName.ToString());
                 commentInfo.Add("text", commentData.snippet.topLevelComment.snippet.textOriginal.ToString());
             }
-            catch (Exception e) {
-                string s = e.Message;
-            }
+            catch (Exception) { }
 
             return commentInfo;
         }
@@ -125,8 +123,10 @@ namespace MultifunctionalChat.Controllers
 
         public static Dictionary<string, string> GetVideoInfo(string videoId)
         {
-            Dictionary<string, string> videoInfo = new Dictionary<string, string>();
-            videoInfo.Add("address", "https://www.youtube.com/watch?v=" + videoId);
+            Dictionary<string, string> videoInfo = new Dictionary<string, string>
+            {
+                { "address", "https://www.youtube.com/watch?v=" + videoId }
+            };
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(
                 "https://youtube.googleapis.com/youtube/v3/videos?" +
@@ -192,8 +192,8 @@ namespace MultifunctionalChat.Controllers
             try
             {
                 dynamic dataFromYoutube = JsonConvert.DeserializeObject(sReadData);
-                dynamic videoData = dataFromYoutube.items[0];
-                videos.Add("https://www.youtube.com/watch?v=" + videoData.id.videoId);
+                foreach (dynamic videoData in dataFromYoutube.items)
+                    videos.Add("https://www.youtube.com/watch?v=" + videoData.id.videoId);
             }
             catch (Exception) { }
 
