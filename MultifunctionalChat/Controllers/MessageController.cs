@@ -177,7 +177,7 @@ namespace MultifunctionalChat.Controllers
                 }
                 else
                 {
-                    result = $"Сделано что-то другое";
+                    result = $"Вы ввели что-то не то :(";
                 }
             }
 
@@ -1044,7 +1044,7 @@ namespace MultifunctionalChat.Controllers
                             $"{commonCommands}" + Environment.NewLine + $"{ownerCommands}, {ownerAndModerCommands}, {moderCommands}, {adminCommands}";
                             listOfResults.AppendLine(currentResult);
                             CreateRoomAndMessageForHelp(message, currentUser, listOfResults);
-                            result = "Получена информация по доступным командам в комнате HelpBot({currentUser.Name})";
+                            result = $"Получена информация по доступным командам в комнате HelpBot({currentUser.Name})";
                             logger.LogInformation(result);
                             return Ok(result);
 
@@ -1206,9 +1206,9 @@ namespace MultifunctionalChat.Controllers
             helpRoom = currentUser.Rooms.Find(room => room.Name == $"HelpBot({currentUser.Name})");
             if (helpRoom == null)
             {
-            helpRoom = new Room { Name = $"HelpBot({currentUser.Name})", OwnerId = message.UserId, Type = 'C', };
-            helpRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = message.UserId, RoomsId = helpRoom.Id } };
-            roomService.Create(helpRoom);
+                helpRoom = new Room { Name = $"HelpBot({currentUser.Name})", OwnerId = message.UserId, Type = 'B', };
+                helpRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = message.UserId, RoomsId = helpRoom.Id } };
+                roomService.Create(helpRoom);
             }
             
             Message helpMessage = new Message { Text = listOfResults.ToString(), UserId = currentUser.Id, RoomId = helpRoom.Id };

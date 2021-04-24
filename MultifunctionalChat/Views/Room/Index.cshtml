@@ -61,7 +61,7 @@
     window.setInterval(function () {
         var elem = document.getElementById('chatroom');
         elem.scrollTop = elem.scrollHeight;
-    }, 500);
+    }, 5000);
 
     const hubConnection = new signalR.HubConnectionBuilder()
         .withUrl("/chat")
