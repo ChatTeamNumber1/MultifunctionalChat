@@ -1,19 +1,29 @@
 ﻿@using MultifunctionalChat.Models;
+@using MultifunctionalChat;
 
 <h3>Список пользователей комнаты</h3>
 @foreach (var roomUser in ViewBag.roomUsers)
 {
-<h4 title="id = @roomUser.User.Id">
-    @roomUser.User.Name 
-    <img title="@roomUser.User.UserRole.Name" height="20" src="@roomUser.User.UserRole.ImageAddress" />
+    <h4 title="id = @roomUser.User.Id">
+        @roomUser.User.Name
+        <img title="@roomUser.User.UserRole.Name" height="20" src="@roomUser.User.UserRole.ImageAddress" />
 
-    @if (roomUser.Status == 'B')
-    {
-        <span style="color:red" title="Пользователь не может писать сообщения">&nbsp;(Заблокирован)</span>
-    }
-    @if (roomUser.Status == 'M')
-    {
-        <span style="color:red" title="Пользователь не может писать сообщения">&nbsp;(Молчит)</span>
-    }
-</h4>
+        @if (roomUser.Status == 'B')
+        {
+            <span style="color:red" title="Пользователь не может писать сообщения">&nbsp;(Заблокирован)</span>
+        }
+        @if (roomUser.Status == 'M')
+        {
+            <span style="color:red" title="Пользователь не может писать сообщения">&nbsp;(Молчит)</span>
+        }
+    </h4>
+}
+
+@if (@ViewBag.currentUser.RoleId.ToString() == StaticVars.ROLE_ADMIN ||
+@ViewBag.currentUser.RoleId.ToString() == StaticVars.ROLE_MODERATOR)
+{
+    <br />
+    <div>
+        <input style="width:80%" type="button" onClick='location.href="/User/AllUsers"' value="Список всех пользователей" />
+    </div>
 }

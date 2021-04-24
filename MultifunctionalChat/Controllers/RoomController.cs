@@ -57,12 +57,16 @@ namespace MultifunctionalChat.Controllers
         }
         public ActionResult GetUsers(string id)
         {
+            var currentUser = _userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+            ViewBag.currentUser = currentUser;
             ViewBag.roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id).OrderBy(ru => ru.User.Name);
             return PartialView("GetUsers");
         }
+
         public ActionResult GetRoomsForUser()
         {
             var currentUser = _userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+            ViewBag.currentUser = currentUser;
             ViewBag.chatRooms = currentUser.Rooms.OrderBy(room => room.Name);
 
             return PartialView("GetRoomsForUser");

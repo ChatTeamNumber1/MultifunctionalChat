@@ -14,6 +14,10 @@ namespace SignalRApp
         {
             await Clients.All.SendAsync("Receive", message, userName, roomId);
         }
+        public async Task RefreshMessages(string roomId)
+        {
+            await Clients.All.SendAsync("RefreshMessages", roomId);
+        }
         public async Task RefreshUsers(string roomId)
         {
             await Clients.All.SendAsync("RefreshUsers", roomId);

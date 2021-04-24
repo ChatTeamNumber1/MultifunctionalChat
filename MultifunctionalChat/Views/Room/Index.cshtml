@@ -1,5 +1,4 @@
 ﻿@using MultifunctionalChat.Models;
-@using MultifunctionalChat;
 
 <head>
     <meta charset="utf-8" />
@@ -18,18 +17,6 @@
                 <div id="UsersList">
                     @await Html.PartialAsync("GetUsers")
                 </div>
-                @if (@ViewBag.currentUser.RoleId.ToString() == StaticVars.ROLE_ADMIN || @ViewBag.currentUser.RoleId.ToString() == StaticVars.ROLE_MODERATOR)
-                {
-                    <br />
-                    <br />
-                    <div>
-                        <input style="width:80%" type="button" onClick='location.href="/User/AllUsers"' value="Список всех пользователей" />
-                    </div>
-                    <br />
-                    <div>
-                        <input style="width:80%" type="button" onClick='location.href="/Room/AllRooms"' value="Список всех комнат" />
-                    </div>
-                }
             </td>
             <td width="75%">
                 <div id="header"></div>
@@ -50,7 +37,10 @@
 
                 <h3>Комната "@ViewBag.room.Name". Создатель "@ViewBag.owner.Name"</h3>
                 <h3>История сообщений</h3>
-                <div id="chatroom" data-roomId="@ViewBag.roomId" style="width:100%; height: 400px; overflow-y:scroll"></div>
+
+                <div id="chatroom" data-roomId="@ViewBag.roomId" style="width:100%; height: 400px; overflow-y:scroll">
+                    @await Html.PartialAsync("GetMessages")
+                </div>
 
                 <br />
 
@@ -64,10 +54,6 @@
         </tr>
     </tbody>
 </table>
-
-<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/16.11.0/umd/react.development.js"></script>
-<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.11.0/umd/react-dom.development.js"></script>
-<script src="~/js/app.jsx"></script>
 
 <script src="~/js/signalr/dist/browser/signalr.min.js"></script>
 <script>
@@ -84,6 +70,20 @@
     let userName = '';
 
     // получение сообщения от сервера
+    hubConnection.on('RefreshMessages', function (roomId) {
+
+        if (roomId != @ViewBag.roomId) {
+            return;
+        }
+        var xhr = new XMLHttpRequest();
+        xhr.open("get", "/Room/GetMessages", true);
+        xhr.send();
+        xhr.onload = function () {
+            document.getElementById("chatroom").innerHTML = xhr.responseText;
+            alert("1");
+        };
+    });
+
     hubConnection.on('RefreshUsers', function (roomId) {
 
         if (roomId != @ViewBag.roomId) {
@@ -189,6 +189,7 @@
                 } else {
                     alert(xhr.responseText);
                     hubConnection.invoke("RefreshUsers", "@ViewBag.roomId");
+                    hubConnection.invoke("RefreshMessages", "@ViewBag.roomId");
                 }
             }
         };
