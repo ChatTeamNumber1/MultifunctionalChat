@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MultifunctionalChat.Models;
@@ -158,6 +159,10 @@ namespace MultifunctionalChat.Controllers
                         return UserPardon(message);
                     }
                 }
+                else if (messageParts[0] == "//help")
+                {
+                    return ListAvailableCommands(message);
+                }
                 else if (messageParts[0] == "//info")
                 {
                     return ChannelInfo(message);
@@ -221,8 +226,8 @@ namespace MultifunctionalChat.Controllers
                 room => room.Name == roomName.Trim()).ToList().Count;
             if (roomCount > 1)
             {
-                result = $"Комнат с таким именем много." + Environment.NewLine +
-                    "Укажите рядом с именем id комнаты." + Environment.NewLine +
+                result = $"Комнат с таким названием много." + Environment.NewLine +
+                    "Укажите рядом с названием id комнаты." + Environment.NewLine +
                     "Например, //room rename Имя(id) || Новое_имя";
             }
             return result;
@@ -323,7 +328,7 @@ namespace MultifunctionalChat.Controllers
             string newUserName = renamedParts[1].Trim();
             userToRename.Name = newUserName;
             userService.Update(userToRename);
-            result = $"Обновлены данные о пользователе с id = {userToRename.Id}";   
+            result = $"Обновлены данные о пользователе {userToRename.Name} с id = {userToRename.Id}";   
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -359,13 +364,13 @@ namespace MultifunctionalChat.Controllers
                 user => message.UserId == user.Id).FirstOrDefault().RoleId;
             if (userRoleId.ToString() != StaticVars.ROLE_ADMIN && userRoleId.ToString() != StaticVars.ROLE_MODERATOR)
             {
-                result = $"Недостаточно прав для бана пользователя с id = {userToBan.Id}";
+                result = $"Недостаточно прав для бана пользователя {userToBan.Name} с id = {userToBan.Id}";
                 logger.LogInformation(result);
                 return NotFound(result);
             } 
             if (userToBan.RoleId == Convert.ToInt32(StaticVars.ROLE_BANNED))
             {
-                result = $"Уже забанен пользователь с id = {userToBan.Id}";
+                result = $"Уже забанен пользователь {userToBan.Name}";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
@@ -388,7 +393,7 @@ namespace MultifunctionalChat.Controllers
             }
 
             userService.Update(userToBan);
-            result = $"Забанен пользователь с id = {userToBan.Id}";
+            result = $"Пользователь {userToBan.Name} забанен на {userToBan.BanInterval} минут";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -419,7 +424,7 @@ namespace MultifunctionalChat.Controllers
             }
             else if (userToUnban.RoleId.ToString() != StaticVars.ROLE_BANNED)
             {
-                result = $"Не забанен пользователь с id = {userToUnban.Id}";
+                result = $"Не забанен пользователь {userToUnban.Name} с id = {userToUnban.Id}";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
@@ -435,7 +440,7 @@ namespace MultifunctionalChat.Controllers
             userToUnban.BanInterval = null;
             userToUnban.BanStart = null;
             userService.Update(userToUnban);
-            result = $"Разбанен пользователь с id = {userToUnban.Id}";
+            result = $"Разбанен пользователь {userToUnban.Name} с id = {userToUnban.Id}";
 
             logger.LogInformation(result);
             return Ok(result);
@@ -449,7 +454,7 @@ namespace MultifunctionalChat.Controllers
 
             if (actionModerator.Length < 2)
             {
-                result = "Неверный формат сообщения (не найдено действие)";
+                result = "Неверный формат сообщения (уточните действие с помощью флагов -n или -d)";
                 logger.LogInformation(result);
                 return NotFound(result);
             }
@@ -493,7 +498,7 @@ namespace MultifunctionalChat.Controllers
 
                 userToModerator.RoleId = Convert.ToInt32(StaticVars.ROLE_MODERATOR);
                 userService.Update(userToModerator);
-                result = $"Назначен модератором пользователь с id = {userToModerator.Id}";
+                result = $"Назначен модератором пользователь {userToModerator.Name} с id = {userToModerator.Id}";
             }
             else if (actionModerator[1].Trim() == "-d")
             {
@@ -506,7 +511,7 @@ namespace MultifunctionalChat.Controllers
 
                 userToModerator.RoleId = Convert.ToInt32(StaticVars.ROLE_USER);
                 userService.Update(userToModerator);
-                result = $"Разжалован из модераторов пользователь с id = {userToModerator.Id}";
+                result = $"Разжалован из модераторов пользователь {userToModerator.Name} с id = {userToModerator.Id}";
             }
 
             logger.LogInformation(result);
@@ -565,7 +570,7 @@ namespace MultifunctionalChat.Controllers
 
             roomService.Create(newRoom);
 
-            result = $"Создана комната с id = {newRoom.Id}";
+            result = $"Создана комната {newRoom.Name}";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -591,7 +596,7 @@ namespace MultifunctionalChat.Controllers
             Room roomToDelete = GetRoomFromStringWithId(roomName);
             if (roomToDelete == null)
             {
-                result = "Комната не найдена";
+                result = $"Комната не найдена";
                 logger.LogError(result);
                 return NotFound(result);
             }
@@ -606,7 +611,7 @@ namespace MultifunctionalChat.Controllers
             }
 
             roomService.Delete(roomToDelete.Id);
-            result = $"Комната удалена";
+            result = $"Комната {roomToDelete.Name} удалена";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -652,7 +657,7 @@ namespace MultifunctionalChat.Controllers
             string newRoomName = renamedParts[1].Trim();
             roomToRename.Name = newRoomName;
             roomService.Update(roomToRename);
-            result = $"Обновлены данные о комнате с id = {roomToRename.Id}";
+            result = $"Обновлены данные о комнате {roomToRename.Name}";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -727,7 +732,7 @@ namespace MultifunctionalChat.Controllers
             }
 
             roomUserService.Create(new RoomUser { RoomsId = roomToConnect.Id, Room = roomToConnect, User = userToConnect, UsersId = userToConnect.Id });
-            result = $"Обновлены данные о комнате с id = {roomToConnect.Id}";
+            result = $"Обновлены данные о комнате {roomToConnect.Name}";
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -923,7 +928,7 @@ namespace MultifunctionalChat.Controllers
             }
 
             roomUserService.Update(roomUser);
-            result = $"Пользователь {roomUser.User.Name} Не может говорить";            
+            result = $"Пользователь {roomUser.User.Name} не может писать сообщения в течение {roomUser.BanInterval} минут";            
             logger.LogInformation(result);
             return Ok(result);
         }
@@ -984,13 +989,109 @@ namespace MultifunctionalChat.Controllers
             roomUser.BanInterval = null;
             roomUser.BanStart = null;
             roomUserService.Update(roomUser);
-            result = $"Пользователь {roomUser.User.Name} снова может говорить";
+            result = $"Пользователь {roomUser.User.Name} снова может писать сообщения";
             logger.LogInformation(result);
             return Ok(result);
         }
 
         #endregion
 
+        public ActionResult<Message> ListAvailableCommands(Message message)
+        {
+            string result = "";
+            string currentResult = "";
+            StringBuilder listOfResults = new StringBuilder();
+
+            var currentUser = usersList.Where(user => user.Id == message.UserId).FirstOrDefault();
+            var roomUser = roomUsersList.Where(room => room.RoomsId == message.RoomId && room.UsersId == message.UserId).FirstOrDefault();
+
+            var roomsAvailable = currentUser.Rooms;
+
+            string commonCommands = "//room create {Название комнаты} - создать комнату (-c приватная комната, -b чат-бот комната)"
+                + Environment.NewLine + "//room connect {Название комнаты} -l {login пользователя} - добавить пользователя в комнату "
+                + Environment.NewLine + "//room disconnect - выйти из текущей комнаты "
+                + Environment.NewLine + "//room disconnect {Название комнаты} - выйти из заданной комнаты ";
+
+            string ownerCommands = Environment.NewLine + "//room remove {Название комнаты} - удалить комнату"
+                + Environment.NewLine + "//room rename {Название комнаты} - переименовать комнату"
+                + Environment.NewLine + "//user rename {имя пользователя}||{Новое имя пользователя} - переименовать пользователя";
+
+            string ownerAndModerCommands = Environment.NewLine + "//room disconnect {Название комнаты} -l {login пользователя} - выгнать пользователя из комнаты " +
+                "(60 мин, либо -m {Количество минут} - время, на которое пользователь не сможет войти)"
+                + Environment.NewLine + "//room mute -l {login пользователя} - пользователь не сможет писать в текущей комнате " +
+                "(10 мин, либо -m {Количество минут} - время mute режима)"
+                + Environment.NewLine + "//room speak -l {login пользователя} - пользователь снова сможет писать в текущей комнате";
+
+            string moderCommands = Environment.NewLine + "//user ban {login пользователя} - выгнать пользователя из всех комнат " +
+                "(навсегда, либо -m {Количество минут} - время, на которое пользователь не сможет войти)"
+                + Environment.NewLine + "//user pardon {login пользователя} - разблокировать пользователя во всех комнатах";
+
+            string adminCommands = Environment.NewLine + "//user moderator {login пользователя} - действия над модераторами " +
+                "(-n - назначить пользователя модератором, -d - разжаловать пользователя)";
+
+            foreach (var room in roomsAvailable)
+            {
+                if (room.Name != "HelpBot({ currentUser.Name})")
+                {
+                    currentResult = $"В комнате'{room.Name}' Вам доступны общие команды: {commonCommands}. ";
+
+                    int roleId = currentUser.RoleId;
+
+                    switch (roleId)
+                    {
+                        case 1:
+                            currentResult = Environment.NewLine + $"Как администратору Вам доступны команды: " + Environment.NewLine +
+                            $"{commonCommands}" + Environment.NewLine + $"{ownerCommands}, {ownerAndModerCommands}, {moderCommands}, {adminCommands}";
+                            listOfResults.AppendLine(currentResult);
+                            CreateRoomAndMessageForHelp(message, currentUser, listOfResults);
+                            result = "Получена информация по доступным командам в комнате HelpBot({currentUser.Name})";
+                            logger.LogInformation(result);
+                            return Ok(result);
+
+                        case 2:
+                            if (currentUser.Id == room.OwnerId)
+                            {
+                                currentResult = String.Concat(currentResult, $"Как модератору и владельцу комнаты '{room.Name}' Вам доступны команды: " +
+                                Environment.NewLine + $"{ownerCommands}, {ownerAndModerCommands}, {moderCommands}");
+                            }
+                            else
+                            {
+                                currentResult = String.Concat(currentResult, $"Как модератору комнаты '{room.Name}' Вам доступны команды: "
+                                   + Environment.NewLine + $"{ownerAndModerCommands}, {moderCommands}");
+                            }
+                            break;
+
+                        case 3:
+                            if (currentUser.Id == room.OwnerId)
+                            {
+                                currentResult = String.Concat(currentResult, $"Как владельцу комнаты '{room.Name}' Вам доступны команды: "
+                                + Environment.NewLine + $"{ownerCommands}, {ownerAndModerCommands}");
+                            }
+                            break;
+
+                        case 4:
+                            if (roomUser.Status == 'B')
+                            {
+                                result = $"Вы забанены. Доступные команды отсутствуют. ";
+                                logger.LogInformation(result);
+                                return Ok(result);
+                            }
+                            else if (roomUser.Status == 'M')
+                            {
+                                currentResult = $"Ваше право писать сообщения в комнате '{room.Name}' ограничено. Доступны команды только для других комнат. ";
+                            }
+                            break;
+                    }
+                    listOfResults.AppendLine(currentResult);
+                }
+            }
+            CreateRoomAndMessageForHelp(message, currentUser, listOfResults);
+
+            result = $"Получена информация по доступным командам в комнате HelpBot({currentUser.Name})";
+            logger.LogInformation(result);
+            return Ok(result);
+        }
+        
         #region VideoCommands
         public ActionResult<Message> ChannelInfo(Message message)
         {
@@ -1097,6 +1198,21 @@ namespace MultifunctionalChat.Controllers
             result = $"Мы все нашли";
             logger.LogInformation(result);
             return Ok(result);
+        }
+
+        public void CreateRoomAndMessageForHelp (Message message, User currentUser, StringBuilder listOfResults)
+        {
+            Room helpRoom = new Room();
+            helpRoom = currentUser.Rooms.Find(room => room.Name == $"HelpBot({currentUser.Name})");
+            if (helpRoom == null)
+            {
+            helpRoom = new Room { Name = $"HelpBot({currentUser.Name})", OwnerId = message.UserId, Type = 'C', };
+            helpRoom.RoomUsers = new List<RoomUser>() { new RoomUser { UsersId = message.UserId, RoomsId = helpRoom.Id } };
+            roomService.Create(helpRoom);
+            }
+            
+            Message helpMessage = new Message { Text = listOfResults.ToString(), UserId = currentUser.Id, RoomId = helpRoom.Id };
+            messageService.Create(helpMessage);
         }
 
         public ActionResult<Message> VideoGetComment(Message message)
