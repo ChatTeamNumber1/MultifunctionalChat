@@ -1,0 +1,57 @@
+﻿@using MultifunctionalChat.Models;
+@using MultifunctionalChat;
+
+<script src="~/js/signalr/dist/browser/signalr.min.js"></script>
+<script>
+    function deleteMessage(id) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("delete", "/message/" + id, true);
+
+        xhr.onload = function () {
+            alert(xhr.responseText);
+        }.bind(this);
+        xhr.send();
+    }
+
+    function deleteMessage(id) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("delete", "/message/" + id, true);
+
+        xhr.onload = function () {
+            alert(xhr.responseText);
+            if (xhr.status === 200) {
+                hubConnection.invoke("RefreshMessages", "@ViewBag.roomId");
+            }
+        }.bind(this);
+        xhr.send();
+    }
+
+</script>
+
+<div id="AllMessages">
+    @foreach (Message message in ViewBag.Messages)
+    {
+        <div id="message_@message.Id">
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td width="50%">
+                            <b>@message.Author.Name</b>
+                            &nbsp;&nbsp;&nbsp;
+                            <img title="@message.Author.UserRole.Name" height="20" src="@message.Author.UserRole.ImageAddress" />
+                        </td>
+                        <td width="50%" align="right">
+                            @message.MessageDate
+
+                            <img title="Удалить" height="20" src="../images/cancel.png" onClick=deleteMessage(@message.Id) />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div>
+                <pre style="overflow: scroll; max-width: 1100px;"/>@message.Text
+            </div>
+            <br />
+        </div>
+    }
+</div>

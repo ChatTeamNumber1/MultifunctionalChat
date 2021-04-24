@@ -9,17 +9,19 @@ namespace MultifunctionalChat.Controllers
 {
     public class RoomController : Controller
     {
+        private readonly IRepository<Message> _messageService;
         private readonly IRepository<Room> _roomService;
         private readonly IRepository<RoomUser> _roomUserService;
         private readonly IRepository<User> _userService;
         private readonly ILogger<MessageController> _logger;
 
-        public RoomController (IRepository<Room> roomService, IRepository<RoomUser> roomUserService, IRepository<User> userService, ILogger<MessageController> logger)
+        public RoomController (IRepository<Message> messageService, IRepository<Room> roomService, IRepository<RoomUser> roomUserService, IRepository<User> userService, ILogger<MessageController> logger)
         {
             _logger = logger;
             _roomService = roomService;
             _roomUserService = roomUserService;
             _userService = userService;
+            _messageService = messageService;
         }
         public IActionResult Index(string id)
         {
@@ -48,6 +50,9 @@ namespace MultifunctionalChat.Controllers
             var Owner = users.Where(us => us.Id == currentRoom.OwnerId).FirstOrDefault();
             ViewBag.owner = Owner;
 
+            var msgList = _messageService.GetList().Where(mess => mess.RoomId.ToString() == id).OrderBy(mess => mess.Id).ToList();
+            ViewBag.messages = msgList;
+
             //Если попали в какую-то комнату, где вас быть не должно...
             if (roomUsers.Where(ru => ru.User == currentUser).ToList().Count == 0 && 
                 (currentUser.RoleId.ToString() == StaticVars.ROLE_USER || currentUser.RoleId.ToString() == StaticVars.ROLE_BANNED))
@@ -55,14 +60,27 @@ namespace MultifunctionalChat.Controllers
 
             return View();
         }
+        public ActionResult GetMessages(string id)
+        {
+            var currentUser = _userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+            ViewBag.currentUser = currentUser;
+
+            var msgList = _messageService.GetList().Where(mess => mess.RoomId.ToString() == id).OrderBy(mess => mess.Id).ToList();
+            ViewBag.messages = msgList;
+            return PartialView("GetMessages");
+        }
         public ActionResult GetUsers(string id)
         {
+            var currentUser = _userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+            ViewBag.currentUser = currentUser;
             ViewBag.roomUsers = _roomUserService.GetList().Where(ru => ru.RoomsId.ToString() == id).OrderBy(ru => ru.User.Name);
             return PartialView("GetUsers");
         }
+
         public ActionResult GetRoomsForUser()
         {
             var currentUser = _userService.GetList().Where(us => us.Login == User.Identity.Name).FirstOrDefault();
+            ViewBag.currentUser = currentUser;
             ViewBag.chatRooms = currentUser.Rooms.OrderBy(room => room.Name);
 
             return PartialView("GetRoomsForUser");

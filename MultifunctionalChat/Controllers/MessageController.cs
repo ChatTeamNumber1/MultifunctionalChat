@@ -1029,7 +1029,7 @@ namespace MultifunctionalChat.Controllers
             {
                 RoomId = room.Id,
                 Text = "Список видео" + Environment.NewLine +
-                String.Join("<br/>", Videos),
+                String.Join(Environment.NewLine, Videos),
                 UserId = Convert.ToInt32(StaticVars.YOUTUBE_BOT_ID)
             };
             messageService.Create(mess);

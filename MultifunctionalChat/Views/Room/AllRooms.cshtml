@@ -1,9 +1,20 @@
 ﻿@using MultifunctionalChat.Models;
 
 <h3>Все комнаты</h3>
-@foreach (Room room in ViewBag.rooms)
+<h3>Доступные комнаты</h3>
+@foreach (Room chatRoom in ViewBag.rooms)
 {
-    <div>
-        <span title="id = @room.Id">@room.Name</span>
-    </div>
+    <a href="/Room/Index?Id=@chatRoom.Id" target="_blank">
+        <h3 title="id = @chatRoom.Id">
+            @chatRoom.Name
+            @if (chatRoom.Type == 'B')
+            {
+                <span style="color:red" title="Чат с YouTube-ботом">&nbsp;(Бот)</span>
+            }
+            @if (chatRoom.Type == 'C')
+            {
+                <span style="color:red" title="Приватная комната">&nbsp;(Приват)</span>
+            }
+        </h3>
+    </a>
 }
