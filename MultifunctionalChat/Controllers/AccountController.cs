@@ -15,9 +15,9 @@ namespace MultifunctionalChat.Controllers
 {
     public class AccountController : Controller
     {
-        private IRepository<User> service;
-        private IRepository<Room> roomService;
-        private IRepository<RoomUser> roomUserService;
+        private readonly IRepository<User> service;
+        private readonly IRepository<Room> roomService;
+        private readonly IRepository<RoomUser> roomUserService;
 
         public AccountController(IRepository<User> context, IRepository<Room> roomService, IRepository<RoomUser> roomUserService)
         {
@@ -30,14 +30,12 @@ namespace MultifunctionalChat.Controllers
         public static string EncryptPassword(string Password)
         {
             var data = Encoding.UTF8.GetBytes(Password);
-            using (SHA512 shaM = new SHA512Managed())
-            {
-                var hashedInputBytes = shaM.ComputeHash(data);
-                var hashedInputStringBuilder = new StringBuilder(128);
-                foreach (var b in hashedInputBytes)
-                    hashedInputStringBuilder.Append(b.ToString("X2"));
-                return hashedInputStringBuilder.ToString();
-            }
+            using SHA512 shaM = new SHA512Managed();
+            var hashedInputBytes = shaM.ComputeHash(data);
+            var hashedInputStringBuilder = new StringBuilder(128);
+            foreach (var b in hashedInputBytes)
+                hashedInputStringBuilder.Append(b.ToString("X2"));
+            return hashedInputStringBuilder.ToString();
         }
 
         [HttpGet]

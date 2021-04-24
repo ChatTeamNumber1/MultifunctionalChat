@@ -29,7 +29,7 @@ namespace MultifunctionalChat.Controllers
         [HttpGet("{id}")]
         public ActionResult<List<Message>> Get(int id)
         {
-            var msgList = messagesList.Where(mess =>mess.RoomId == id).ToList();
+            var msgList = messagesList.Where(mess =>mess.RoomId == id).OrderBy(mess => mess.Id).ToList();
             logger.LogInformation($"Выведены сообщения из комнаты с id = {id}");
             return msgList;
         }

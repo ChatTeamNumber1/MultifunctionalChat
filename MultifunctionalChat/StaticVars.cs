@@ -8,6 +8,10 @@ namespace MultifunctionalChat
     public static class StaticVars
     {
         /// <summary>
+        /// Бот YouTube
+        /// </summary>
+        public const string YOUTUBE_BOT_ID = "1";
+        /// <summary>
         /// Самая общая комната
         /// </summary>
         public const string DEFAULT_ROOM_ID = "3";

@@ -17,6 +17,12 @@ namespace MultifunctionalChat.Controllers
             this.logger = logger;
         }
 
+        public ActionResult AllUsers(string id)
+        {
+            ViewBag.users = usersService.GetList();
+            return PartialView("AllUsers");
+        }
+
         [HttpGet]
         public ActionResult<List<User>> Get()
         {
