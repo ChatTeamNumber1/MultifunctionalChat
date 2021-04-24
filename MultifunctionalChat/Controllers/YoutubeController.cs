@@ -1,27 +1,16 @@
 ﻿using System;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-
-//using Google.Apis.Auth.OAuth2;
-using Google.Apis.Services;
-using Google.Apis.Upload;
-using Google.Apis.Util.Store;
-//using Google.Apis.YouTube.v3;
-//using Google.Apis.YouTube.v3.Data;
-using System.Net;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace MultifunctionalChat.Controllers
 {
     public class YoutubeController : Controller
     {
         //TODO Хранить в настройках
-        private static string myKey = "AIzaSyDfd7fLx9lePxtrtkQE2A0NZdoqRLdV_SA";
+        private const string myKey = "AIzaSyDfd7fLx9lePxtrtkQE2A0NZdoqRLdV_SA";
         
         public static string GetChannelIdByName(string channel)
         {
@@ -39,8 +28,8 @@ namespace MultifunctionalChat.Controllers
             try
             {
                 dynamic dataFromYoutube = JsonConvert.DeserializeObject(sReadData);
-                foreach (dynamic channelData in dataFromYoutube.items)
-                    result = channelData.id;
+                dynamic channelData = dataFromYoutube.items[0];
+                result = channelData.id;
             }
             catch (Exception) { }
 
@@ -74,6 +63,94 @@ namespace MultifunctionalChat.Controllers
             return result;
         }
 
+        public static Dictionary<string, string> GetRandomComment(string videoId)
+        {
+            Dictionary<string, string> commentInfo = new Dictionary<string, string>();
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(
+                "https://youtube.googleapis.com/youtube/v3/commentThreads?" +
+                "part=snippet,id&maxResults=25&videoId=" + videoId + "&key=" + myKey);
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream stream = response.GetResponseStream();
+            StreamReader sr = new StreamReader(stream);
+            string sReadData = sr.ReadToEnd();
+            response.Close();
+
+            //Извините за названия, но это что-то очень абстрактное
+            try
+            {
+                dynamic dataFromYoutube = JsonConvert.DeserializeObject(sReadData);
+                int n = dataFromYoutube.items.Count;
+                if (n > 25)
+                    n = 25;
+
+                Random rnd = new Random();
+                int commentNumber = rnd.Next() % n;
+                dynamic commentData = dataFromYoutube.items[commentNumber];
+                commentInfo.Add("user", commentData.snippet.topLevelComment.snippet.authorDisplayName.ToString());
+                commentInfo.Add("text", commentData.snippet.topLevelComment.snippet.textOriginal.ToString());
+            }
+            catch (Exception e) {
+                string s = e.Message;
+            }
+
+            return commentInfo;
+        }
+
+        public static string GetVideoIdByNameAndChannel(string channelId, string videoName)
+        {
+            string videoId = "";
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(
+                "https://youtube.googleapis.com/youtube/v3/search?" +
+                "q=" + videoName + "&part=id&order=date&maxResults=1&channelId=" + channelId + "&key=" + myKey);
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream stream = response.GetResponseStream();
+            StreamReader sr = new StreamReader(stream);
+            string sReadData = sr.ReadToEnd();
+            response.Close();
+
+            try
+            {
+                dynamic dataFromYoutube = JsonConvert.DeserializeObject(sReadData);
+                dynamic videoData = dataFromYoutube.items[0];
+                videoId = videoData.id.videoId;
+            }
+            catch (Exception) { }
+
+            return videoId;
+        }
+
+        public static Dictionary<string, string> GetVideoInfo(string videoId)
+        {
+            Dictionary<string, string> videoInfo = new Dictionary<string, string>();
+            videoInfo.Add("address", "https://www.youtube.com/watch?v=" + videoId);
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(
+                "https://youtube.googleapis.com/youtube/v3/videos?" +
+                "part=statistics&id=" + videoId + "&key=" + myKey);
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream stream = response.GetResponseStream();
+            StreamReader sr = new StreamReader(stream);
+            string sReadData = sr.ReadToEnd();
+            response.Close();
+
+            //Извините за названия, но это что-то очень абстрактное
+            try
+            {
+                dynamic dataFromYoutube = JsonConvert.DeserializeObject(sReadData);
+                dynamic videoData = dataFromYoutube.items[0];
+                videoInfo.Add("likes", videoData.statistics.likeCount.ToString());
+                videoInfo.Add("views", videoData.statistics.viewCount.ToString());
+            }
+            catch (Exception ) { }
+
+            return videoInfo;
+        }
+
         public static string GetChannelNameById(string id)
         {
             string result = "";
@@ -102,8 +179,6 @@ namespace MultifunctionalChat.Controllers
         {
             List<string> videos = new List<string>();
 
-            string myKey = "AIzaSyDfd7fLx9lePxtrtkQE2A0NZdoqRLdV_SA";
-
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(
                 "https://youtube.googleapis.com/youtube/v3/search?" +
                 "part=snippet,id&order=date&maxResults=5&channelId=" + channel + "&key=" + myKey);
@@ -111,98 +186,18 @@ namespace MultifunctionalChat.Controllers
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream stream = response.GetResponseStream();
             StreamReader sr = new StreamReader(stream);
-
             string sReadData = sr.ReadToEnd();
             response.Close();
 
-            //Извините за названия, но это что-то очень абстрактное
             try
             {
                 dynamic dataFromYoutube = JsonConvert.DeserializeObject(sReadData);
-                foreach (dynamic videoData in dataFromYoutube.items)
-                {
-                    videos.Add("https://www.youtube.com/watch?v=" + videoData.id.videoId);
-                }
+                dynamic videoData = dataFromYoutube.items[0];
+                videos.Add("https://www.youtube.com/watch?v=" + videoData.id.videoId);
             }
             catch (Exception) { }
 
             return videos;
-        }
-
-
-        // GET: YoutubeController
-        public ActionResult Index()
-        {
-            return View();
-        }
-
-        // GET: YoutubeController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: YoutubeController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: YoutubeController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: YoutubeController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: YoutubeController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: YoutubeController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: YoutubeController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
+        }        
     }
 }

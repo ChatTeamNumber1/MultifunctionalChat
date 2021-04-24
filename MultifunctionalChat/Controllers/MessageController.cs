@@ -113,7 +113,7 @@ namespace MultifunctionalChat.Controllers
                     if (messageParts.Length > 1 && messageParts[1] == "create")
                     {
                         return RoomCreate(message);
-                    }                    
+                    }
                     else if (messageParts.Length > 1 && messageParts[1] == "remove")
                     {
                         return RoomRemove(message);
@@ -139,7 +139,7 @@ namespace MultifunctionalChat.Controllers
                         return RoomSpeak(message);
                     }
                 }
-                if (messageParts[0] == "//user")
+                else if (messageParts[0] == "//user")
                 {
                     if (messageParts.Length > 1 && messageParts[1] == "rename")
                     {
@@ -157,6 +157,15 @@ namespace MultifunctionalChat.Controllers
                     {
                         return UserPardon(message);
                     }
+                }
+                else if (messageParts[0] == "//info")
+                {
+                }
+                else if (messageParts[0] == "//find")
+                {
+                }
+                else if (messageParts[0] == "//videoCommentRandom")
+                {
                 }
                 else
                 {

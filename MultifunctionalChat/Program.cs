@@ -13,6 +13,7 @@ namespace MultifunctionalChat
     {
         public static void Main(string[] args)
         {
+            //info
             string channelId = 
                 Controllers.YoutubeController.GetChannelIdByName("Прикольное проектное программирование");
             if (channelId != "")
@@ -20,9 +21,18 @@ namespace MultifunctionalChat
                 string name = Controllers.YoutubeController.GetChannelNameById(channelId);
                 var Videos = Controllers.YoutubeController.GetVideosByChannel(channelId);
             }
+            else 
+            {
+                //канал не найден
+            }
 
+            //find
+            string videoId = Controllers.YoutubeController.GetVideoIdByNameAndChannel(channelId, "Работа с API");
+            Dictionary<string, string> videoInfo = Controllers.YoutubeController.GetVideoInfo(videoId);
 
-            //CreateHostBuilder(args).Build().Run();
+            //videoCommentRandom
+            Dictionary<string, string> randomComment = Controllers.YoutubeController.GetRandomComment(videoId);
+            CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
