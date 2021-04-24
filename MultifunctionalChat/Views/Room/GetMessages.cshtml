@@ -9,9 +9,6 @@
 
         xhr.onload = function () {
             alert(xhr.responseText);
-            if (xhr.status === 200) {
-                this.loadData();
-            }
         }.bind(this);
         xhr.send();
     }
@@ -51,7 +48,9 @@
                     </tr>
                 </tbody>
             </table>
-            <div>@message.Text</div>
+            <div>
+                <pre style="overflow: scroll; max-width: 1100px;"/>@message.Text
+            </div>
             <br />
         </div>
     }
