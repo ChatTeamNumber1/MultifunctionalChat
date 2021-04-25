@@ -1008,8 +1008,11 @@ namespace MultifunctionalChat.Controllers
             string commonCommands = "//room create {Название комнаты} - создать комнату (-c приватная комната, -b чат-бот комната)"
                 + Environment.NewLine + "//room connect {Название комнаты} -l {login пользователя} - добавить пользователя в комнату "
                 + Environment.NewLine + "//room disconnect - выйти из текущей комнаты "
-                + Environment.NewLine + "//room disconnect {Название комнаты} - выйти из заданной комнаты ";
-
+                + Environment.NewLine + "//room disconnect {Название комнаты} - выйти из заданной комнаты "
+                + Environment.NewLine + "//find {название канала}||{название видео} - ссылка на видео на YouTube (-v - количество просмотров, -l - количество лайков) "
+                + Environment.NewLine + "//info {название канала} - Имя канала и ссылки на последние 5 роликов "
+                + Environment.NewLine + "//videoCommentRandom {название канала}||{Название ролика} - выводится login комментирующего и один рандомный комментарий ";
+            
             string ownerCommands = Environment.NewLine + "//room remove {Название комнаты} - удалить комнату"
                 + Environment.NewLine + "//room rename {Название комнаты} - переименовать комнату"
                 + Environment.NewLine + "//user rename {имя пользователя}||{Новое имя пользователя} - переименовать пользователя";
